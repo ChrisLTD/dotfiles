@@ -1,0 +1,33 @@
+[user]
+  name = Chris Johnson
+  email = {{ .gitEmail }}
+[core]
+  quotepath = false
+  autocrlf = input
+  editor = 'vim'
+	excludesfile = /Users/chrisltd/.gitignore
+[push]
+  default = simple
+  autoSetupRemote = true
+[alias]
+  co = checkout
+  ec = config --global -e
+  up = !git pull --rebase --prune $@ && git submodule update --init --recursive
+  cob = checkout -b
+  cm = !git add -A && git commit -m
+  save = !git add -A && git commit -m 'SAVEPOINT'
+  wip = !git add -u && git commit -m "WIP"
+  undo = reset HEAD~1 --mixed
+  amend = commit -a --amend
+  wipe = !git add -A && git commit -qm 'WIPE SAVEPOINT' && git reset HEAD~1 --hard
+  bclean = "!f() { git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs -r g:it branch -d; }; f"
+  bdone = "!f() { git checkout ${1-master} && git up && git bclean ${1-master}; }; f"
+  st = status
+  logp = log --pretty=oneline --max-count=20
+  subinit = !git submodule init && git submodule update
+  mmain = !git fetch origin main && git merge origin/main
+  mmaster = !git fetch origin master && git merge origin/master
+  nvpush = !git push --no-verify
+  recent = !git for-each-ref --sort='-authordate:iso8601' --format=' %(authordate:relative)%09%(refname:short)' --count=10  refs/heads
+[url "ssh://git@github.com/"]
+	insteadOf = https://github.com/

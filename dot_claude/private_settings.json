@@ -1,0 +1,14 @@
+{
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
+  "effortLevel": "xhigh",
+  "voice": {
+    "enabled": false,
+    "mode": "hold"
+  },
+  "skipAutoPermissionPrompt": true,
+  "voiceEnabled": false,
+  "model": "sonnet"
+}
