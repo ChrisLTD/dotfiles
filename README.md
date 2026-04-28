@@ -37,6 +37,13 @@ cd ~/.local/share/chezmoi && git add . && git commit -m "Add new-agent"
 
 It will automatically be available in both `~/.claude/` and `~/.claude-business/` via the symlinks.
 
+## Adding a new dotfile
+
+```sh
+chezmoi add ~/.some-config-file
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add some-config-file"
+```
+
 ## Editing a managed dotfile
 
 Edit the file directly in your home directory, then re-add it to sync the change into chezmoi:
