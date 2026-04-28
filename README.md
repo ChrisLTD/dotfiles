@@ -37,7 +37,30 @@ cd ~/.local/share/chezmoi && git add . && git commit -m "Add new-agent"
 
 It will automatically be available in both `~/.claude/` and `~/.claude-business/` via the symlinks.
 
-## Updating
+## Editing a managed dotfile
+
+Edit the file directly in your home directory, then re-add it to sync the change into chezmoi:
+
+```sh
+# Edit as normal, e.g.:
+vim ~/.zshrc
+
+# Sync the change into the chezmoi source
+chezmoi add ~/.zshrc
+
+# Commit
+cd ~/.local/share/chezmoi && git add . && git commit -m "Update zshrc"
+```
+
+Or edit the source file directly and apply:
+
+```sh
+chezmoi edit ~/.zshrc   # opens the source file in $EDITOR
+chezmoi apply
+cd ~/.local/share/chezmoi && git add . && git commit -m "Update zshrc"
+```
+
+## Pulling updates on another machine
 
 ```sh
 chezmoi update   # pull latest and apply
