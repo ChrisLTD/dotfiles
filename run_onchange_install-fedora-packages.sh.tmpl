@@ -1,0 +1,43 @@
+#!/bin/bash
+{{ if ne .chezmoi.os "linux" -}}
+exit 0
+{{ end -}}
+set -euo pipefail
+
+# --- Flatpak ---
+
+# Ensure Flathub remote is registered
+flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+
+flatpak install -y flathub \
+  com.google.Chrome \
+  com.mattjakeman.ExtensionManager \
+  com.onepassword.OnePassword \
+  app.drey.Gradia \
+  de.haeckerfelix.Shortwave \
+  io.github.focustimerhq.FocusTimer \
+  md.obsidian.Obsidian \
+  org.gnome.Epiphany \
+  org.gnome.Solanum \
+  io.github.wartybix.Constrict \
+  org.localsend.localsend_app \
+  org.mozilla.firefox
+
+# Maybe install these (uncomment as needed):
+# flatpak install -y flathub app.drey.Keypunch
+# flatpak install -y flathub com.github.dynobo.normcap
+# flatpak install -y flathub com.github.tchx84.Flatseal
+# flatpak install -y flathub org.gnome.DejaDup
+# flatpak install -y flathub org.gnome.World.PikaBackup
+
+# --- GNOME settings ---
+
+# Remap Caps Lock to Escape
+gsettings set org.gnome.desktop.input-sources xkb-options "['caps:escape']"
+
+# --- GNOME Extensions (install manually via Extension Manager) ---
+# - Clipboard Indicator by Tudmotu
+#     Exclude: com.onepassword.OnePassword
+#     Toggle shortcut: shift-super-v
+# - PaperWM
+# - Night Theme Switcher (https://nightthemeswitcher.romainvigier.fr/)

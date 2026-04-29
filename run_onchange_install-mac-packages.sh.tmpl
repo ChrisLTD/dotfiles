@@ -1,0 +1,18 @@
+#!/bin/bash
+{{ if ne .chezmoi.os "darwin" -}}
+exit 0
+{{ end -}}
+# Brewfile hash: {{ include "dot_Brewfile" | sha256sum }}
+set -euo pipefail
+
+# Install Homebrew if missing
+if ! command -v brew &>/dev/null; then
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+fi
+
+brew bundle --global
+
+# GitHub Copilot CLI (gh extension, not a formula)
+if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
+  gh extension install github/gh-copilot
+fi

@@ -27,6 +27,40 @@ chezmoi apply
 | `~/.claude/commands/` | Claude Code slash commands |
 | `~/.claude-business/agents/` | Symlink → `~/.claude/agents/` |
 | `~/.claude-business/commands/` | Symlink → `~/.claude/commands/` |
+| `~/.Brewfile` | Homebrew bundle — formulas and casks for macOS |
+
+## Package installation
+
+`chezmoi apply` automatically runs platform-specific install scripts:
+
+- **Mac** (`run_onchange_install-mac-packages.sh.tmpl`): installs Homebrew if missing, then runs `brew bundle --global` using `~/.Brewfile`. Re-runs automatically whenever `~/.Brewfile` changes.
+- **Fedora Silverblue** (`run_onchange_install-fedora-packages.sh.tmpl`): adds Flathub remote, installs Flatpak apps, and applies GNOME settings via `gsettings`.
+
+Each script guards itself with an OS check and exits immediately on the wrong platform.
+
+### Adding a Homebrew package (Mac)
+
+```sh
+chezmoi edit ~/.Brewfile   # add the formula or cask
+chezmoi apply              # installs new packages via brew bundle
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add <package> to Brewfile"
+```
+
+### Adding a Flatpak app (Fedora Silverblue)
+
+```sh
+chezmoi edit ~/.local/share/chezmoi/run_onchange_install-fedora-packages.sh.tmpl
+# add a new flatpak install line, then:
+chezmoi apply
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add <app> flatpak"
+```
+
+### GNOME extensions (Fedora Silverblue — manual)
+
+Install via Extension Manager app. Recommended extensions:
+- **Clipboard Indicator** — exclude `com.onepassword.OnePassword`, toggle shortcut: `shift-super-v`
+- **PaperWM** — tiling window management
+- **Night Theme Switcher**
 
 ## Adding a new agent or command
 
