@@ -1,0 +1,9 @@
+# Folder view configuration files
+.DS_Store
+
+# IntelliJ Project files
+.idea
+
+# Robots
+.claude/*
+
