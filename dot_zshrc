@@ -5,7 +5,8 @@ alias vim=nvim
 
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
-export PATH="/Users/chrisltd/.local/state/fnm_multishells/4232_1761749368035/bin:/Users/chrisltd/Downloads/google-cloud-sdk/bin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/homebrew/bin:/Applications/iTerm.app/Contents/Resources/utilities:/Users/chrisltd/go/bin"
+export PATH="$HOME/go/bin:$PATH"
+eval "$(mise activate zsh)"
 export GOPRIVATE="github.com/measured-fi"
 
 # claude alternative auth config
