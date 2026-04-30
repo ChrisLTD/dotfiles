@@ -34,7 +34,9 @@ brew "zoxide"
 
 # --- Casks ---
 cask "bbedit"
+cask "bruno"
 cask "claude-code"
+cask "dropbox"
 cask "codex"
 cask "firefox"
 cask "ghostty"
