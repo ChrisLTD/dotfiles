@@ -4,12 +4,41 @@ Managed with [chezmoi](https://www.chezmoi.io/).
 
 ## New machine setup
 
+These steps assume a brand new machine with no chezmoi installed.
+
+### 1. Prerequisites
+
+**Mac:** install the Xcode Command Line Tools (provides `git`):
+
 ```sh
-chezmoi init git@github.com:ChrisLTD/dotfiles.git
-chezmoi apply
+xcode-select --install
 ```
 
-`chezmoi init` will prompt for your git email address and write it to `~/.config/chezmoi/chezmoi.yaml` (local only, not committed).
+**Fedora Silverblue:** `git` ships with the base image, no action needed.
+
+### 2. SSH key for GitHub
+
+The dotfiles repo is cloned over SSH, so add a key to your GitHub account:
+
+```sh
+ssh-keygen -t ed25519 -C "your_email@example.com"
+# Then add ~/.ssh/id_ed25519.pub at https://github.com/settings/keys
+```
+
+### 3. Install chezmoi and apply in one step
+
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply --ssh ChrisLTD/dotfiles
+```
+
+This downloads chezmoi to `~/bin/chezmoi`, clones the repo, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
+
+### Subsequent runs
+
+```sh
+chezmoi apply                  # re-apply local source
+chezmoi update                 # pull latest from git and apply
+```
 
 ## What's managed
 
