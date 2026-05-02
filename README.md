@@ -16,22 +16,23 @@ xcode-select --install
 
 **Fedora Silverblue:** `git` ships with the base image, no action needed.
 
-### 2. SSH key for GitHub
+### 2. Install chezmoi and apply in one step
 
-The dotfiles repo is cloned over SSH, so add a key to your GitHub account:
+```sh
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply ChrisLTD/dotfiles
+```
+
+This downloads chezmoi to `~/bin/chezmoi`, clones the repo over HTTPS, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
+
+### 3. (Optional) SSH key for pushing changes back
+
+The repo is public, so HTTPS clone works without auth. If you plan to commit and push edits from this machine, add an SSH key to GitHub and switch the chezmoi source remote to SSH:
 
 ```sh
 ssh-keygen -t ed25519 -C "your_email@example.com"
-# Then add ~/.ssh/id_ed25519.pub at https://github.com/settings/keys
+# Add ~/.ssh/id_ed25519.pub at https://github.com/settings/keys
+git -C "$(chezmoi source-path)" remote set-url origin git@github.com:ChrisLTD/dotfiles.git
 ```
-
-### 3. Install chezmoi and apply in one step
-
-```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply --ssh ChrisLTD/dotfiles
-```
-
-This downloads chezmoi to `~/bin/chezmoi`, clones the repo, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
 
 ### Subsequent runs
 
