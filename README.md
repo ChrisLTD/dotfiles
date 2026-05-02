@@ -19,10 +19,10 @@ xcode-select --install
 ### 2. Install chezmoi and apply in one step
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply ChrisLTD/dotfiles
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init --apply ChrisLTD/dotfiles
 ```
 
-This downloads chezmoi to `~/bin/chezmoi`, clones the repo over HTTPS, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
+This downloads chezmoi to `~/.local/bin/chezmoi` (which is on PATH on Fedora by default and added to PATH in `dot_zshrc` for Mac), clones the repo over HTTPS, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
 
 ### 3. (Optional) SSH key for pushing changes back
 
@@ -84,6 +84,21 @@ chezmoi edit ~/.local/share/chezmoi/run_onchange_install-fedora-packages.sh.tmpl
 chezmoi apply
 cd ~/.local/share/chezmoi && git add . && git commit -m "Add <app> flatpak"
 ```
+
+### Dev CLIs in a Toolbox (Fedora Silverblue)
+
+CLI dev tools (nvim, gh, lazygit, ripgrep, language toolchains) live in a [Toolbox](https://containertoolbx.org/) container, not on the immutable host. `$HOME` is bind-mounted into the toolbox, so dotfiles applied by chezmoi on the host work as-is inside the container.
+
+```sh
+# One-time setup
+toolbox create
+toolbox enter
+bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
+```
+
+To make Ptyxis open new tabs directly into the toolbox: Preferences → Profiles → set "Container" to your toolbox name.
+
+To add a tool, edit `scripts/setup-toolbox.sh`, then re-run it inside the toolbox.
 
 ### GNOME extensions (Fedora Silverblue — manual)
 
