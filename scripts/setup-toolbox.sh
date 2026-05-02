@@ -16,22 +16,29 @@ if [ ! -f /run/.containerenv ] && [ ! -f /.dockerenv ]; then
   exit 1
 fi
 
-sudo dnf install -y \
-  neovim \
-  git \
-  gh \
-  lazygit \
-  tmux \
-  ripgrep \
-  fd-find \
-  fzf \
-  zsh \
-  zoxide \
-  eza \
-  gcc \
-  make \
-  python3-pip \
+CHEZMOI="${CHEZMOI:-$(command -v chezmoi || echo "$HOME/.local/bin/chezmoi")}"
+if [ ! -x "$CHEZMOI" ]; then
+  echo "chezmoi not found at \$PATH or $HOME/.local/bin. Run new-machine setup on the host first." >&2
+  exit 1
+fi
+
+# Render the shared CLI list from .chezmoidata/cli_packages.yaml
+SHARED_DNF=$("$CHEZMOI" execute-template '{{ range .cli_packages }}{{ .dnf }} {{ end }}')
+
+# Toolbox-only packages (build tools, language toolchains, host-installed-via-XCode-on-Mac)
+TOOLBOX_ONLY=(
+  git
+  ripgrep
+  fd-find
+  zsh
+  gcc
+  make
+  python3-pip
   nodejs
+)
+
+# shellcheck disable=SC2086
+sudo dnf install -y $SHARED_DNF "${TOOLBOX_ONLY[@]}"
 
 # GitHub Copilot CLI extension
 if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then

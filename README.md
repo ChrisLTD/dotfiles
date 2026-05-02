@@ -68,13 +68,29 @@ chezmoi update                 # pull latest from git and apply
 
 Each script guards itself with an OS check and exits immediately on the wrong platform.
 
-### Adding a Homebrew package (Mac)
+### Adding a Homebrew package (Mac-only)
+
+For tools you only want on Mac (casks, `mas` apps, Mac-only formulas):
 
 ```sh
 chezmoi edit ~/.Brewfile   # add the formula or cask
 chezmoi apply              # installs new packages via brew bundle
 cd ~/.local/share/chezmoi && git add . && git commit -m "Add <package> to Brewfile"
 ```
+
+### Adding a shared CLI (Mac + Fedora toolbox)
+
+For CLI tools you want on both platforms, edit the shared list:
+
+```sh
+chezmoi edit ~/.local/share/chezmoi/.chezmoidata/cli_packages.yaml
+chezmoi apply              # Mac: rerenders Brewfile and runs brew bundle
+# Inside the Fedora toolbox:
+bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add <tool> to shared CLIs"
+```
+
+`dot_Brewfile.tmpl` and `scripts/setup-toolbox.sh` both read from `.chezmoidata/cli_packages.yaml`, so a single edit propagates to both. Each entry has a `brew` and `dnf` name (most are identical; some differ, e.g. `fd` / `fd-find`).
 
 ### Adding a Flatpak app (Fedora Silverblue)
 
