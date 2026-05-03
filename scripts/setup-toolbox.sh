@@ -50,15 +50,17 @@ fi
 
 # mise — runtime version manager
 if ! command -v mise >/dev/null; then
-  cargo install mise
+  cargo install --locked mise
 fi
 
 # tlrc — Rust tldr-pages client (binary is `tldr`)
 if ! command -v tldr >/dev/null; then
-  cargo install tlrc
+  cargo install --locked tlrc
 fi
 
-# yazi — terminal file manager (already configured via dot_config/yazi/)
+# yazi — terminal file manager (already configured via dot_config/yazi/).
+# yazi-fm provides the `yazi` TUI; yazi-cli adds `ya` for plugin/theme
+# management (`ya pack`) and pub/sub shell integrations.
 if ! command -v yazi >/dev/null; then
   cargo install --locked yazi-fm yazi-cli
 fi
