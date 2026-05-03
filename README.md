@@ -90,7 +90,7 @@ bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
 cd ~/.local/share/chezmoi && git add . && git commit -m "Add <tool> to shared CLIs"
 ```
 
-`dot_Brewfile.tmpl` and `scripts/setup-toolbox.sh` both read from `.chezmoidata/cli_packages.yaml`, so a single edit propagates to both. Each entry has a `brew` and `dnf` name (most are identical; some differ, e.g. `fd` / `fd-find`).
+`dot_Brewfile.tmpl` and `scripts/setup-toolbox.sh` both read from `.chezmoidata/cli_packages.yaml`, so a single edit propagates to both. Each entry has a `brew` and `dnf` name (most are identical; some differ, e.g. `tree-sitter` / `tree-sitter-cli`).
 
 ### Adding a Flatpak app (Fedora Silverblue)
 
@@ -114,7 +114,7 @@ bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
 
 To make Ptyxis open new tabs directly into the toolbox: Preferences → Profiles → set "Container" to your toolbox name.
 
-To add a tool, edit `scripts/setup-toolbox.sh`, then re-run it inside the toolbox.
+To add a tool: if it should also be on Mac, add it to `.chezmoidata/cli_packages.yaml` (see "Adding a shared CLI" above). For toolbox-only packages (build tools, language toolchains), edit the `TOOLBOX_ONLY` array in `scripts/setup-toolbox.sh`. Either way, re-run the script inside the toolbox.
 
 ### GNOME extensions (Fedora Silverblue — manual)
 

@@ -22,8 +22,9 @@ if [ ! -x "$CHEZMOI" ]; then
   exit 1
 fi
 
-# Render the shared CLI list from .chezmoidata/cli_packages.yaml
-SHARED_DNF=$("$CHEZMOI" execute-template '{{ range .cli_packages }}{{ .dnf }} {{ end }}')
+# Render the shared CLI list from .chezmoidata/cli_packages.yaml into an array
+# (one package per line so names can't be word-split unexpectedly).
+mapfile -t SHARED_DNF < <("$CHEZMOI" execute-template '{{ range .cli_packages }}{{ .dnf }}{{ "\n" }}{{ end }}')
 
 # Toolbox-only packages (build tools, language toolchains, host-installed-via-XCode-on-Mac)
 TOOLBOX_ONLY=(
@@ -36,8 +37,7 @@ TOOLBOX_ONLY=(
   nodejs
 )
 
-# shellcheck disable=SC2086
-sudo dnf install -y $SHARED_DNF "${TOOLBOX_ONLY[@]}"
+sudo dnf install -y "${SHARED_DNF[@]}" "${TOOLBOX_ONLY[@]}"
 
 # GitHub Copilot CLI extension
 if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
