@@ -112,7 +112,16 @@ toolbox enter
 bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
 ```
 
-To make Ptyxis open new tabs directly into the toolbox: Preferences → Profiles → set "Container" to your toolbox name.
+To make Ptyxis open new tabs directly into the toolbox running zsh:
+
+1. Open Ptyxis → hamburger menu → **Preferences**
+2. Select your profile (or "Default") → **Edit**
+3. Under the **Command** tab:
+   - Set **Container** to your toolbox name (e.g. `fedora-toolbox-41`)
+   - Toggle **Custom command** on
+   - Enter: `/usr/bin/zsh -l`
+
+The `-l` flag makes it a login shell so `~/.zprofile` is sourced; `~/.zshrc` then runs because `$HOME` is bind-mounted into the toolbox.
 
 To add a tool: if it should also be on Mac, add it to `.chezmoidata/cli_packages.yaml` (see "Adding a shared CLI" above). For toolbox-only packages (build tools, language toolchains), edit the `TOOLBOX_ONLY` array in `scripts/setup-toolbox.sh`. Either way, re-run the script inside the toolbox.
 
