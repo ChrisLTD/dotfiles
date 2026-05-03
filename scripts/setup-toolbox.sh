@@ -28,13 +28,15 @@ mapfile -t SHARED_DNF < <("$CHEZMOI" execute-template '{{ range .cli_packages }}
 
 # Toolbox-only packages. fedora-toolbox already ships with git, so it's
 # omitted here. gcc/make come from Xcode CLT on Mac, not the Brewfile.
+# rust+cargo are needed for the cargo-installed tools below.
 TOOLBOX_ONLY=(
   fd-find
   zsh
   gcc
   make
   python3-pip
-  nodejs
+  rust
+  cargo
 )
 
 sudo dnf install -y "${SHARED_DNF[@]}" "${TOOLBOX_ONLY[@]}"
@@ -43,3 +45,38 @@ sudo dnf install -y "${SHARED_DNF[@]}" "${TOOLBOX_ONLY[@]}"
 if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
   gh extension install github/gh-copilot
 fi
+
+# --- Tools not in dnf (each guarded so re-runs are quick) ---
+
+# mise — runtime version manager (own installer; lands in ~/.local/bin/mise)
+if ! command -v mise >/dev/null; then
+  curl https://mise.run | sh
+fi
+
+# pnpm — via corepack, which ships with the dnf nodejs package
+if ! command -v pnpm >/dev/null && command -v corepack >/dev/null; then
+  sudo corepack enable pnpm
+fi
+
+# tlrc — Rust tldr-pages client (binary is `tldr`)
+if ! command -v tldr >/dev/null; then
+  cargo install tlrc
+fi
+
+# yazi — terminal file manager (already configured via dot_config/yazi/)
+if ! command -v yazi >/dev/null; then
+  cargo install --locked yazi-fm yazi-cli
+fi
+
+# goose — pick ONE of the two installers below depending on which `goose`
+# you actually use (the brew formula is ambiguous):
+#
+#   Block AI agent (https://block.github.io/goose/):
+# if ! command -v goose >/dev/null; then
+#   curl -fsSL https://github.com/block/goose/releases/download/stable/download_cli.sh | bash
+# fi
+#
+#   pressly DB migrations (https://github.com/pressly/goose):
+# if ! command -v goose >/dev/null; then
+#   go install github.com/pressly/goose/v3/cmd/goose@latest
+# fi

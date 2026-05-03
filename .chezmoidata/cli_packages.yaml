@@ -9,16 +9,22 @@
 #   dnf:  Fedora package name (often the same; sometimes differs, e.g. fd-find)
 
 cli_packages:
+  - brew: bat
+    dnf: bat
   - brew: eza
     dnf: eza
   - brew: fzf
     dnf: fzf
   - brew: gh
     dnf: gh
+  - brew: go
+    dnf: golang
   - brew: lazygit
     dnf: lazygit
   - brew: neovim
     dnf: neovim
+  - brew: node
+    dnf: nodejs
   - brew: ripgrep
     dnf: ripgrep
   - brew: tmux

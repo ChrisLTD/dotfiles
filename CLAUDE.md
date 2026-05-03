@@ -17,7 +17,7 @@ This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both do
 | `.chezmoidata/cli_packages.yaml` | — | Source of truth for CLIs installed on both Mac (brew) and Fedora toolbox (dnf). Each entry has `brew:` and `dnf:` names |
 | `run_onchange_install-mac-packages.sh.tmpl` | — | Mac: installs Homebrew + brew bundle. Hash includes `cli_packages` JSON, so editing the shared list re-triggers `brew bundle` |
 | `run_onchange_install-fedora-packages.sh.tmpl` | — | Fedora: installs Flatpak apps + gsettings (host-level only) |
-| `scripts/setup-toolbox.sh` | — | Run inside a Fedora toolbox; installs shared CLIs (rendered via `chezmoi execute-template`) plus a `TOOLBOX_ONLY` array (zsh, gcc, make, fd-find, python3-pip, nodejs). Ignored by chezmoi via `.chezmoiignore` |
+| `scripts/setup-toolbox.sh` | — | Run inside a Fedora toolbox; installs shared CLIs (rendered via `chezmoi execute-template`), a `TOOLBOX_ONLY` dnf array (zsh, gcc, make, fd-find, python3-pip, rust, cargo), and a non-dnf section for tools without Fedora packages (mise via its installer, pnpm via corepack, tlrc/yazi via cargo, goose via either Block's installer or `go install`). Ignored by chezmoi via `.chezmoiignore` |
 | `scripts/setup-ptyxis.sh` | — | **Experimental, untested.** Run on the host after `toolbox create`; configures the default Ptyxis profile to launch `/usr/bin/zsh -l` inside the toolbox via `gsettings` |
 
 Neovim config is pulled via `.chezmoiexternal.toml` from a separate git repo (`ChrisLTD/nvim`). It probes `vim.fn.executable("tree-sitter")` — on Mac that comes from `brew "tree-sitter"`; on Fedora it's the `tree-sitter-cli` dnf package (the plain `tree-sitter` dnf package is just the C library).
