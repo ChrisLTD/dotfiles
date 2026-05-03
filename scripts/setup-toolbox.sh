@@ -28,7 +28,6 @@ SHARED_DNF=$("$CHEZMOI" execute-template '{{ range .cli_packages }}{{ .dnf }} {{
 # Toolbox-only packages (build tools, language toolchains, host-installed-via-XCode-on-Mac)
 TOOLBOX_ONLY=(
   git
-  ripgrep
   fd-find
   zsh
   gcc

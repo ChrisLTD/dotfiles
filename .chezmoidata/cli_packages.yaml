@@ -19,7 +19,11 @@ cli_packages:
     dnf: lazygit
   - brew: neovim
     dnf: neovim
+  - brew: ripgrep
+    dnf: ripgrep
   - brew: tmux
     dnf: tmux
+  - brew: tree-sitter
+    dnf: tree-sitter-cli
   - brew: zoxide
     dnf: zoxide
