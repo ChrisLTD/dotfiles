@@ -123,6 +123,12 @@ To make Ptyxis open new tabs directly into the toolbox running zsh:
 
 The `-l` flag makes it a login shell so `~/.zprofile` is sourced; `~/.zshrc` then runs because `$HOME` is bind-mounted into the toolbox.
 
+There's also an **experimental, untested** helper that automates these `gsettings` calls — `scripts/setup-ptyxis.sh`. Ptyxis schema keys can change between releases, so verify with `gsettings list-keys org.gnome.Ptyxis.Profile` first if it doesn't take effect. Usage:
+
+```sh
+bash ~/.local/share/chezmoi/scripts/setup-ptyxis.sh [container-name]
+```
+
 To add a tool: if it should also be on Mac, add it to `.chezmoidata/cli_packages.yaml` (see "Adding a shared CLI" above). For toolbox-only packages (build tools, language toolchains), edit the `TOOLBOX_ONLY` array in `scripts/setup-toolbox.sh`. Either way, re-run the script inside the toolbox.
 
 ### GNOME extensions (Fedora Silverblue — manual)
