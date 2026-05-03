@@ -26,9 +26,9 @@ fi
 # (one package per line so names can't be word-split unexpectedly).
 mapfile -t SHARED_DNF < <("$CHEZMOI" execute-template '{{ range .cli_packages }}{{ .dnf }}{{ "\n" }}{{ end }}')
 
-# Toolbox-only packages (build tools, language toolchains, host-installed-via-XCode-on-Mac)
+# Toolbox-only packages. fedora-toolbox already ships with git, so it's
+# omitted here. gcc/make come from Xcode CLT on Mac, not the Brewfile.
 TOOLBOX_ONLY=(
-  git
   fd-find
   zsh
   gcc
