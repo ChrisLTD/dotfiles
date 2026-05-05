@@ -5,7 +5,7 @@ alias vim=nvim
 
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
-export PATH="$HOME/go/bin:$PATH"
+export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
 eval "$(mise activate zsh)"
 export GOPRIVATE="github.com/measured-fi"
 

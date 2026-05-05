@@ -1,0 +1,35 @@
+# Shared CLI tools installed on both Mac (Homebrew) and Fedora toolbox (dnf).
+#
+# Both dot_Brewfile.tmpl and scripts/setup-toolbox.sh read from this list.
+# Add a tool here once and it lands in both places on the next chezmoi apply
+# / toolbox setup re-run.
+#
+# Each entry:
+#   brew: Homebrew formula name
+#   dnf:  Fedora package name (often the same; sometimes differs, e.g. fd-find)
+
+cli_packages:
+  - brew: bat
+    dnf: bat
+  - brew: eza
+    dnf: eza
+  - brew: fzf
+    dnf: fzf
+  - brew: gh
+    dnf: gh
+  - brew: go
+    dnf: golang
+  - brew: lazygit
+    dnf: lazygit
+  - brew: neovim
+    dnf: neovim
+  - brew: node
+    dnf: nodejs
+  - brew: ripgrep
+    dnf: ripgrep
+  - brew: tmux
+    dnf: tmux
+  - brew: tree-sitter
+    dnf: tree-sitter-cli
+  - brew: zoxide
+    dnf: zoxide

@@ -13,11 +13,14 @@ This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both do
 | `dot_config/yazi/` | `~/.config/yazi/` | Yazi file manager config |
 | `dot_config/git/` | `~/.config/git/` | Global gitignore |
 | `dot_claude/` | `~/.claude/` | Claude Code settings, agents, commands |
-| `dot_Brewfile` | `~/.Brewfile` | Homebrew bundle (Mac only) |
-| `run_onchange_install-mac-packages.sh.tmpl` | — | Mac: installs Homebrew + brew bundle |
-| `run_onchange_install-fedora-packages.sh.tmpl` | — | Fedora: installs Flatpak apps + gsettings |
+| `dot_Brewfile.tmpl` | `~/.Brewfile` | Homebrew bundle (Mac only). Templated — shared CLIs are rendered from `.chezmoidata/cli_packages.yaml` |
+| `.chezmoidata/cli_packages.yaml` | — | Source of truth for CLIs installed on both Mac (brew) and Fedora toolbox (dnf). Each entry has `brew:` and `dnf:` names |
+| `run_onchange_install-mac-packages.sh.tmpl` | — | Mac: installs Homebrew + brew bundle. Hash includes `cli_packages` JSON, so editing the shared list re-triggers `brew bundle` |
+| `run_onchange_install-fedora-packages.sh.tmpl` | — | Fedora: installs Flatpak apps + gsettings (host-level only) |
+| `scripts/setup-toolbox.sh` | — | Run inside a Fedora toolbox; installs shared CLIs (rendered via `chezmoi execute-template`), a `TOOLBOX_ONLY` dnf array (zsh, gcc, make, fd-find, python3-pip, rust, cargo), and a non-dnf section for tools without Fedora packages (mise via its installer, pnpm via corepack, tlrc/yazi via cargo, goose via either Block's installer or `go install`). Ignored by chezmoi via `.chezmoiignore` |
+| `scripts/setup-ptyxis.sh` | — | **Experimental, untested.** Run on the host after `toolbox create`; configures the default Ptyxis profile to launch `/usr/bin/zsh -l` inside the toolbox via `gsettings` |
 
-Neovim config is pulled via `.chezmoiexternal.toml` from a separate git repo.
+Neovim config is pulled via `.chezmoiexternal.toml` from a separate git repo (`ChrisLTD/nvim`). It probes `vim.fn.executable("tree-sitter")` — on Mac that comes from `brew "tree-sitter"`; on Fedora it's the `tree-sitter-cli` dnf package (the plain `tree-sitter` dnf package is just the C library).
 
 ## How `chezmoi apply` works
 
@@ -63,10 +66,11 @@ chezmoi update                 # pull latest from git and apply
   - **Clipboard Indicator** — after installing: exclude `com.onepassword.OnePassword`, set toggle shortcut to `shift-super-v`
   - **PaperWM**
   - **Night Theme Switcher** (https://nightthemeswitcher.romainvigier.fr/)
-- [ ] Set up Toolbox or Distrobox for CLI dev tools (neovim, gh, lazygit, etc.)
-- [ ] Terminal (Ptyxis) settings — manual, no automation available:
-  - New tab: `ctrl-t`, Close tab: `ctrl-w`, Next: `ctrl-tab`, Prev: `shift-ctrl-tab`
-  - Theme: Tokyo Night, Font: Source Code Pro 12, Line spacing: 1.1, Cursor: i-beam
+- [x] Set up Toolbox for CLI dev tools — `toolbox create && toolbox enter && bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh`
+- [ ] Terminal (Ptyxis) settings:
+  - Profile → Container = `fedora-toolbox-<ver>`, Custom command = `/usr/bin/zsh -l` (manual, or try the experimental `scripts/setup-ptyxis.sh`)
+  - Keybindings: New tab `ctrl-t`, Close tab `ctrl-w`, Next `ctrl-tab`, Prev `shift-ctrl-tab` (no automation)
+  - Theme: Tokyo Night, Font: Source Code Pro 12, Line spacing: 1.1, Cursor: i-beam (no automation)
 - [ ] Web (Epiphany) — create web apps for YouTube Music, Numbr.dev
 - [ ] Firefox — disable swipe navigation: open `about:config`, set `browser.gesture.swipe.left` and `browser.gesture.swipe.right` to empty strings
 - [ ] Hardware settings (manual in GNOME Settings):
@@ -79,14 +83,30 @@ chezmoi update                 # pull latest from git and apply
 
 ## Adding a package
 
-**Mac:**
+**Mac-only formula / cask / mas app:**
 ```sh
-chezmoi edit ~/.Brewfile   # add brew/cask line
+chezmoi edit ~/.Brewfile   # opens dot_Brewfile.tmpl in $EDITOR
 chezmoi apply
 cd ~/.local/share/chezmoi && git add . && git commit -m "Add <package>"
 ```
 
-**Fedora:**
+**Shared CLI (Mac brew + Fedora toolbox dnf):**
+```sh
+chezmoi edit ~/.local/share/chezmoi/.chezmoidata/cli_packages.yaml
+chezmoi apply              # Mac: re-renders Brewfile, re-runs brew bundle
+# Inside the Fedora toolbox:
+bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add <tool> to shared CLIs"
+```
+
+**Toolbox-only CLI (build tool, language toolchain):**
+```sh
+# Edit the TOOLBOX_ONLY array in scripts/setup-toolbox.sh, then:
+bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add <tool> to TOOLBOX_ONLY"
+```
+
+**Fedora Flatpak (host GUI app):**
 ```sh
 chezmoi edit ~/.local/share/chezmoi/run_onchange_install-fedora-packages.sh.tmpl
 # add flatpak install line, then:

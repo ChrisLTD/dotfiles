@@ -19,10 +19,10 @@ xcode-select --install
 ### 2. Install chezmoi and apply in one step
 
 ```sh
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply ChrisLTD/dotfiles
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b ~/.local/bin init --apply ChrisLTD/dotfiles
 ```
 
-This downloads chezmoi to `~/bin/chezmoi`, clones the repo over HTTPS, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
+This downloads chezmoi to `~/.local/bin/chezmoi` (which is on PATH on Fedora by default and added to PATH in `dot_zshrc` for Mac), clones the repo over HTTPS, prompts for your git email (written to `~/.config/chezmoi/chezmoi.yaml`, local only), and runs `chezmoi apply` — which then runs the platform-specific install script (Homebrew + `brew bundle` on Mac, Flatpak apps + gsettings on Fedora).
 
 ### 3. (Optional) SSH key for pushing changes back
 
@@ -68,13 +68,29 @@ chezmoi update                 # pull latest from git and apply
 
 Each script guards itself with an OS check and exits immediately on the wrong platform.
 
-### Adding a Homebrew package (Mac)
+### Adding a Homebrew package (Mac-only)
+
+For tools you only want on Mac (casks, `mas` apps, Mac-only formulas):
 
 ```sh
 chezmoi edit ~/.Brewfile   # add the formula or cask
 chezmoi apply              # installs new packages via brew bundle
 cd ~/.local/share/chezmoi && git add . && git commit -m "Add <package> to Brewfile"
 ```
+
+### Adding a shared CLI (Mac + Fedora toolbox)
+
+For CLI tools you want on both platforms, edit the shared list:
+
+```sh
+chezmoi edit ~/.local/share/chezmoi/.chezmoidata/cli_packages.yaml
+chezmoi apply              # Mac: rerenders Brewfile and runs brew bundle
+# Inside the Fedora toolbox:
+bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
+cd ~/.local/share/chezmoi && git add . && git commit -m "Add <tool> to shared CLIs"
+```
+
+`dot_Brewfile.tmpl` and `scripts/setup-toolbox.sh` both read from `.chezmoidata/cli_packages.yaml`, so a single edit propagates to both. Each entry has a `brew` and `dnf` name (most are identical; some differ, e.g. `tree-sitter` / `tree-sitter-cli`).
 
 ### Adding a Flatpak app (Fedora Silverblue)
 
@@ -84,6 +100,36 @@ chezmoi edit ~/.local/share/chezmoi/run_onchange_install-fedora-packages.sh.tmpl
 chezmoi apply
 cd ~/.local/share/chezmoi && git add . && git commit -m "Add <app> flatpak"
 ```
+
+### Dev CLIs in a Toolbox (Fedora Silverblue)
+
+CLI dev tools (nvim, gh, lazygit, ripgrep, language toolchains) live in a [Toolbox](https://containertoolbx.org/) container, not on the immutable host. `$HOME` is bind-mounted into the toolbox, so dotfiles applied by chezmoi on the host work as-is inside the container.
+
+```sh
+# One-time setup
+toolbox create
+toolbox enter
+bash ~/.local/share/chezmoi/scripts/setup-toolbox.sh
+```
+
+To make Ptyxis open new tabs directly into the toolbox running zsh:
+
+1. Open Ptyxis → hamburger menu → **Preferences**
+2. Select your profile (or "Default") → **Edit**
+3. Under the **Command** tab:
+   - Set **Container** to your toolbox name (e.g. `fedora-toolbox-41`)
+   - Toggle **Custom command** on
+   - Enter: `/usr/bin/zsh -l`
+
+The `-l` flag makes it a login shell so `~/.zprofile` is sourced; `~/.zshrc` then runs because `$HOME` is bind-mounted into the toolbox.
+
+There's also an **experimental, untested** helper that automates these `gsettings` calls — `scripts/setup-ptyxis.sh`. Ptyxis schema keys can change between releases, so verify with `gsettings list-keys org.gnome.Ptyxis.Profile` first if it doesn't take effect. Usage:
+
+```sh
+bash ~/.local/share/chezmoi/scripts/setup-ptyxis.sh [container-name]
+```
+
+To add a tool: if it should also be on Mac, add it to `.chezmoidata/cli_packages.yaml` (see "Adding a shared CLI" above). For toolbox-only packages (build tools, language toolchains), edit the `TOOLBOX_ONLY` array in `scripts/setup-toolbox.sh`. Either way, re-run the script inside the toolbox.
 
 ### GNOME extensions (Fedora Silverblue — manual)
 

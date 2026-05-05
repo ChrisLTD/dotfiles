@@ -1,27 +1,21 @@
 # Managed by chezmoi — deploys to ~/.Brewfile
 # Run manually: brew bundle --global
 
-# --- Formulas ---
-brew "bat"
+# --- Shared CLIs (mirrored to Fedora toolbox) ---
+# Source of truth: .chezmoidata/cli_packages.yaml
+{{- range .cli_packages }}
+brew "{{ .brew }}"
+{{- end }}
+
+# --- Mac-only formulas ---
 brew "chezmoi"
 brew "defaultbrowser"
-brew "eza"
-brew "fzf"
-brew "gh"
-brew "go"
 brew "goose"
-brew "lazygit"
 brew "mas"
 brew "mise"
-brew "neovim"
-brew "node"
 brew "pnpm"
 brew "tlrc"
-brew "tmux"
-brew "tree-sitter"
-brew "tree-sitter-cli"
 brew "yazi"
-brew "zoxide"
 # brew "ansible"
 # brew "apfel"
 # brew "fnm"
