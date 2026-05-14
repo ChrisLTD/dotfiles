@@ -15,6 +15,10 @@ alias claude-work='CLAUDE_CONFIG_DIR=~/.claude-business claude'
 # zoxide
 eval "$(zoxide init zsh)"
 
+# pnpm
+alias pn='pnpm'
+alias pnx='pnpm dlx'
+
 # ls -> eza
 alias ls='eza --group-directories-first --all'
 alias ll='eza -lah --git --group-directories-first'
