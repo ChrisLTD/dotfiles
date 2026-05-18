@@ -6,6 +6,7 @@ local config = wezterm.config_builder()
 
 -- or, changing the font size and color scheme.
 config.font_size = 14
+-- Disable ligatures (calt=contextual alternates, clig=contextual ligatures, liga=standard ligatures)
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 -- config.color_scheme = 'AdventureTime'
 
