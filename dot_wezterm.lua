@@ -5,7 +5,7 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 
 -- or, changing the font size and color scheme.
-config.font_size = 13
+config.font_size = 14
 -- config.color_scheme = 'AdventureTime'
 
 -- random color scheme from https://alexplescan.com/posts/2024/08/10/wezterm/
