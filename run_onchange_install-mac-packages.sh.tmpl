@@ -11,7 +11,7 @@ if ! command -v brew &>/dev/null; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-brew bundle --global
+brew bundle --global --no-upgrade
 
 # GitHub Copilot CLI (gh extension, not a formula)
 if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
