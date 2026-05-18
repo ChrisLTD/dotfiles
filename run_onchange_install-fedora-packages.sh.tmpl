@@ -9,7 +9,7 @@ set -euo pipefail
 # Ensure Flathub remote is registered
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
-flatpak install -y flathub \
+flatpak install -y --noninteractive flathub \
   com.google.Chrome \
   com.usebruno.Bruno \
   com.mattjakeman.ExtensionManager \
