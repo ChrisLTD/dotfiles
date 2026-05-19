@@ -26,6 +26,16 @@ config.keys = {
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
 }
 
+-- show cwd in right part of top bar
+wezterm.on("update-right-status", function(window, pane)
+	local dir = ""
+	local cwd = pane:get_current_working_dir()
+	if cwd then
+		dir = cwd.file_path:match("([^/]+)/?$") or ""
+	end
+	window:set_right_status(dir .. " ")
+end)
+
 -- random color scheme from https://alexplescan.com/posts/2024/08/10/wezterm/
 local dark_schemes = {
 	"Catppuccin Mocha",
@@ -126,36 +136,6 @@ wezterm.on("augment-command-palette", function(_, _)
 			end),
 		},
 	}
-end)
-
--- output all themes to file in home directory
--- local scheme_list = {}
--- for name, _ in pairs(wezterm.color.get_builtin_schemes()) do
--- 	table.insert(scheme_list, name)
--- end
--- table.sort(scheme_list)
--- local f = io.open(os.getenv("HOME") .. "/wezterm-schemes.txt", "w")
--- if f then
--- 	for _, name in ipairs(scheme_list) do
--- 		f:write(name .. "\n")
--- 	end
--- 	f:close()
--- end
-
-wezterm.on("update-right-status", function(window, pane)
-	local scheme = (window:get_config_overrides() or {}).color_scheme or ""
-
-	local dir = ""
-	local cwd = pane:get_current_working_dir()
-	if cwd then
-		dir = cwd.file_path:match("([^/]+)/?$") or ""
-	end
-
-	local parts = {}
-	if dir ~= "" then table.insert(parts, dir) end
-	if scheme ~= "" then table.insert(parts, scheme) end
-
-	window:set_right_status(table.concat(parts, "  ·  "))
 end)
 
 return config
