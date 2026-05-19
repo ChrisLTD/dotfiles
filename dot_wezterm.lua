@@ -8,6 +8,7 @@ local fav_theme = { light = "Catppuccin Latte", dark = "Catppuccin Mocha" }
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
 
 config.font_size = 14
+config.inactive_pane_hsb = { saturation = 0.9, brightness = 0.9 }
 -- calt=contextual alternates, clig=contextual ligatures, liga=standard ligatures
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
