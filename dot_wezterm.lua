@@ -3,6 +3,8 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 local config = wezterm.config_builder()
 
+-- comment favorite themes out of random arrays below
+local fav_theme = { light = "Catppuccin Latte", dark = "Catppuccin Mocha" }
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
 
 config.font_size = 14
@@ -33,12 +35,17 @@ wezterm.on("update-right-status", function(window, pane)
 	if cwd then
 		dir = cwd.file_path:match("([^/]+)/?$") or ""
 	end
-	window:set_right_status(dir .. " ")
+	local palette = window:effective_config().resolved_palette
+	local fg = (palette and palette.foreground) or "#ffffff"
+	window:set_right_status(wezterm.format({
+		{ Foreground = { Color = fg } },
+		{ Text = " " .. dir .. " " },
+	}))
 end)
 
 -- random color scheme from https://alexplescan.com/posts/2024/08/10/wezterm/
 local dark_schemes = {
-	"Catppuccin Mocha",
+	--	"Catppuccin Mocha",
 	"Tokyo Night",
 	"Tokyo Night Storm",
 	"Tokyo Night Moon",
@@ -77,7 +84,7 @@ local dark_schemes = {
 	"Railscasts (base16)",
 }
 local light_schemes = {
-	"Catppuccin Latte",
+	--	"Catppuccin Latte",
 	"Tokyo Night Day",
 	"rose-pine-dawn",
 	"Gruvbox light, hard (base16)",
@@ -102,19 +109,18 @@ local light_schemes = {
 }
 
 wezterm.on("window-config-reloaded", function(window, _)
+	local current = (window:get_config_overrides() or {}).color_scheme
+	if current == fav_theme.light or current == fav_theme.dark then
+		return
+	end
+
 	local is_dark = wezterm.gui.get_appearance():find("Dark")
 	local schemes = is_dark and dark_schemes or light_schemes
-
-	-- Only re-pick if the current scheme isn't already from the right list.
-	-- This prevents an infinite loop (setting an override triggers another reload)
-	-- and also re-picks automatically when the OS appearance changes.
-	local current = (window:get_config_overrides() or {}).color_scheme
 	for _, s in ipairs(schemes) do
 		if s == current then
 			return
 		end
 	end
-
 	local scheme = schemes[math.random(#schemes)]
 	window:set_config_overrides({ color_scheme = scheme })
 end)
@@ -122,19 +128,24 @@ end)
 wezterm.on("augment-command-palette", function(_, _)
 	return {
 		{
-			brief = "Theme: Random Dark",
+			brief = "Theme: " .. fav_theme.dark,
 			icon = "md_weather_night",
 			action = wezterm.action_callback(function(window, _)
-				local scheme = dark_schemes[math.random(#dark_schemes)]
-				window:set_config_overrides({ color_scheme = scheme })
+				window:set_config_overrides({ color_scheme = fav_theme.dark })
 			end),
 		},
 		{
-			brief = "Theme: Random Light",
+			brief = "Theme: Catppuccin Light",
 			icon = "md_weather_sunny",
 			action = wezterm.action_callback(function(window, _)
-				local scheme = light_schemes[math.random(#light_schemes)]
-				window:set_config_overrides({ color_scheme = scheme })
+				window:set_config_overrides({ color_scheme = fav_theme.light })
+			end),
+		},
+		{
+			brief = "Theme: Random",
+			icon = "md_shuffle",
+			action = wezterm.action_callback(function(window, _)
+				window:set_config_overrides({})
 			end),
 		},
 	}
