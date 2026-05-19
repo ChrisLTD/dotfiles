@@ -1,5 +1,6 @@
 -- Pull in the wezterm API
 local wezterm = require("wezterm")
+local act = wezterm.action
 
 -- This will hold the configuration.
 local config = wezterm.config_builder()
@@ -23,11 +24,15 @@ config.window_frame = {
 
 -- key bindings
 config.keys = {
+	-- open command palette
 	{
 		key = "P",
 		mods = is_mac and "CMD|SHIFT" or "CTRL|SHIFT",
 		action = wezterm.action.ActivateCommandPalette,
 	},
+	-- Move active tab left / right
+	{ key = "[", mods = "CTRL|SHIFT", action = act.MoveTabRelative(-1) },
+	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
 }
 
 -- random color scheme from https://alexplescan.com/posts/2024/08/10/wezterm/
