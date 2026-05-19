@@ -1,6 +1,6 @@
 local wezterm = require("wezterm")
-local act = wezterm.action
 
+local act = wezterm.action
 local config = wezterm.config_builder()
 
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
@@ -40,6 +40,31 @@ local dark_schemes = {
 	"Kanagawa (Gogh)",
 	"Everforest Dark (Gogh)",
 	"Ayu Dark (Gogh)",
+	"carbonfox",
+	"nightfox",
+	"duskfox",
+	"terafox",
+	"iceberg-dark",
+	"flexoki-dark",
+	"Poimandres",
+	"zenbones_dark",
+	"neobones_dark",
+	"One Dark (Gogh)",
+	"Tomorrow Night Eighties",
+	"Andromeda",
+	"seoulbones_dark",
+	"farmhouse-dark",
+	"GitHub Dark",
+	"Vs Code Dark+ (Gogh)",
+	"Windows 95 (base16)",
+	"iTerm2 Dark Background",
+	"AdventureTime",
+	"Homebrew",
+	"Monokai Pro (Gogh)",
+	"Monokai Soda",
+	"Monokai Vivid",
+	"Monokai Remastered",
+	"Railscasts (base16)",
 }
 local light_schemes = {
 	"Catppuccin Latte",
@@ -50,6 +75,20 @@ local light_schemes = {
 	"Ayu Light (Gogh)",
 	"Solarized Light (Gogh)",
 	"Everforest Light (Gogh)",
+	"dayfox",
+	"dawnfox",
+	"iceberg-light",
+	"flexoki-light",
+	"One Light (Gogh)",
+	"zenbones_light",
+	"neobones_light",
+	"PaperColor Light (base16)",
+	"seoulbones_light",
+	"farmhouse-light",
+	"Github Light (Gogh)",
+	"Vs Code Light+ (Gogh)",
+	"Windows 95 Light (base16)",
+	"iTerm2 Light Background",
 }
 
 wezterm.on("window-config-reloaded", function(window, _)
@@ -68,7 +107,6 @@ wezterm.on("window-config-reloaded", function(window, _)
 
 	local scheme = schemes[math.random(#schemes)]
 	window:set_config_overrides({ color_scheme = scheme })
-	wezterm.log_info("Your colour scheme is now: " .. scheme)
 end)
 
 wezterm.on("augment-command-palette", function(_, _)
@@ -88,6 +126,36 @@ wezterm.on("augment-command-palette", function(_, _)
 			end),
 		},
 	}
+end)
+
+-- output all themes to file in home directory
+-- local scheme_list = {}
+-- for name, _ in pairs(wezterm.color.get_builtin_schemes()) do
+-- 	table.insert(scheme_list, name)
+-- end
+-- table.sort(scheme_list)
+-- local f = io.open(os.getenv("HOME") .. "/wezterm-schemes.txt", "w")
+-- if f then
+-- 	for _, name in ipairs(scheme_list) do
+-- 		f:write(name .. "\n")
+-- 	end
+-- 	f:close()
+-- end
+
+wezterm.on("update-right-status", function(window, pane)
+	local scheme = (window:get_config_overrides() or {}).color_scheme or ""
+
+	local dir = ""
+	local cwd = pane:get_current_working_dir()
+	if cwd then
+		dir = cwd.file_path:match("([^/]+)/?$") or ""
+	end
+
+	local parts = {}
+	if dir ~= "" then table.insert(parts, dir) end
+	if scheme ~= "" then table.insert(parts, scheme) end
+
+	window:set_right_status(table.concat(parts, "  ·  "))
 end)
 
 return config
