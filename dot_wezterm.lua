@@ -61,5 +61,24 @@ wezterm.on("window-config-reloaded", function(window, _)
 	wezterm.log_info("Your colour scheme is now: " .. scheme)
 end)
 
+wezterm.on("augment-command-palette", function(_, _)
+	return {
+		{
+			brief = "Theme: Switch to Catppuccin Mocha (Dark)",
+			icon = "md_weather_night", -- Uses a Nerd Font icon name
+			action = wezterm.action_callback(function(window, _)
+				window:set_config_overrides({ color_scheme = "Catppuccin Mocha" })
+			end),
+		},
+		{
+			brief = "Theme: Switch to Catppuccin Latte (Light)",
+			icon = "md_weather_sunny",
+			action = wezterm.action_callback(function(window, _)
+				window:set_config_overrides({ color_scheme = "Catppuccin Latte" })
+			end),
+		},
+	}
+end)
+
 -- Finally, return the configuration to wezterm:
 return config
