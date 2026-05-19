@@ -19,7 +19,7 @@ config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
 config.window_frame = {
 	font = wezterm.font({ family = "JetBrains Mono", weight = "Bold" }),
-	font_size = 12,
+	font_size = 13,
 }
 
 -- key bindings
