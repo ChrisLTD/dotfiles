@@ -58,6 +58,7 @@ chezmoi update                 # pull latest from git and apply
 | `~/.claude/commands/` | Claude Code slash commands |
 | `~/.claude-business/agents/` | Symlink → `~/.claude/agents/` |
 | `~/.claude-business/commands/` | Symlink → `~/.claude/commands/` |
+| `~/.claude-business/settings.json` | Claude Code settings for the business profile |
 | `~/.Brewfile` | Homebrew bundle — formulas and casks for macOS |
 
 ## Package installation
