@@ -122,17 +122,19 @@ end)
 wezterm.on("augment-command-palette", function(_, _)
 	return {
 		{
-			brief = "Theme: Switch to Catppuccin Mocha (Dark)",
+			brief = "Theme: Random Dark",
 			icon = "md_weather_night",
 			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({ color_scheme = "Catppuccin Mocha" })
+				local scheme = dark_schemes[math.random(#dark_schemes)]
+				window:set_config_overrides({ color_scheme = scheme })
 			end),
 		},
 		{
-			brief = "Theme: Switch to Catppuccin Latte (Light)",
+			brief = "Theme: Random Light",
 			icon = "md_weather_sunny",
 			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({ color_scheme = "Catppuccin Latte" })
+				local scheme = light_schemes[math.random(#light_schemes)]
+				window:set_config_overrides({ color_scheme = scheme })
 			end),
 		},
 	}
