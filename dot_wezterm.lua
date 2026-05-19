@@ -5,6 +5,9 @@ local config = wezterm.config_builder()
 
 -- comment favorite themes out of random arrays below
 local fav_theme = { light = "Catppuccin Latte", dark = "Catppuccin Mocha" }
+if wezterm.GLOBAL.follow_os_appearance == nil then
+	wezterm.GLOBAL.follow_os_appearance = true
+end
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
 
 config.font_size = 14
@@ -111,14 +114,23 @@ local light_schemes = {
 	"iTerm2 Light Background",
 }
 
+local all_schemes = {}
+for _, s in ipairs(dark_schemes) do table.insert(all_schemes, s) end
+for _, s in ipairs(light_schemes) do table.insert(all_schemes, s) end
+
 wezterm.on("window-config-reloaded", function(window, _)
 	local current = (window:get_config_overrides() or {}).color_scheme
 	if current == fav_theme.light or current == fav_theme.dark then
 		return
 	end
 
-	local is_dark = wezterm.gui.get_appearance():find("Dark")
-	local schemes = is_dark and dark_schemes or light_schemes
+	local schemes
+	if wezterm.GLOBAL.follow_os_appearance then
+		local is_dark = wezterm.gui.get_appearance():find("Dark")
+		schemes = is_dark and dark_schemes or light_schemes
+	else
+		schemes = all_schemes
+	end
 	for _, s in ipairs(schemes) do
 		if s == current then
 			return
@@ -148,6 +160,15 @@ wezterm.on("augment-command-palette", function(_, _)
 			brief = "Theme: Random",
 			icon = "md_shuffle",
 			action = wezterm.action_callback(function(window, _)
+				window:set_config_overrides({})
+			end),
+		},
+		{
+			brief = "Theme: Toggle OS appearance matching ("
+				.. (wezterm.GLOBAL.follow_os_appearance and "on" or "off") .. ")",
+			icon = "md_theme_light_dark",
+			action = wezterm.action_callback(function(window, _)
+				wezterm.GLOBAL.follow_os_appearance = not wezterm.GLOBAL.follow_os_appearance
 				window:set_config_overrides({})
 			end),
 		},
