@@ -10,6 +10,16 @@ config.font_size = 14
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 -- config.color_scheme = 'AdventureTime'
 
+-- style window chrome
+
+-- Removes the title bar. Keeps the ability to resize by dragging edges.
+-- On macOS, 'RESIZE|INTEGRATED_BUTTONS' puts window controls in tab bar
+config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
+config.window_frame = {
+	font = wezterm.font({ family = "JetBrains Mono", weight = "Bold" }),
+	font_size = 12,
+}
+
 -- random color scheme from https://alexplescan.com/posts/2024/08/10/wezterm/
 -- Creates a lua table containing the name of every color scheme WezTerm
 -- ships with.
