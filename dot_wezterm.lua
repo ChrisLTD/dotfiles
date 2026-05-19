@@ -26,6 +26,8 @@ config.keys = {
 	},
 	{ key = "[", mods = "CTRL|SHIFT", action = act.MoveTabRelative(-1) },
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
+	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
+	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
 }
 
 -- show cwd in right part of top bar
