@@ -32,6 +32,18 @@ config.keys = {
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
 	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
 	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
+	{
+		key = "w",
+		mods = "CMD",
+		action = wezterm.action_callback(function(window, pane)
+			local tab = window:active_tab()
+			if #tab:panes() > 1 then
+				window:perform_action(act.CloseCurrentPane({ confirm = true }), pane)
+			else
+				window:perform_action(act.CloseCurrentTab({ confirm = true }), pane)
+			end
+		end),
+	},
 }
 
 -- show cwd in right part of top bar
