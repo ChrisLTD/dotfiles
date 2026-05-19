@@ -41,9 +41,20 @@ wezterm.on("update-right-status", function(window, pane)
 	if cwd then
 		dir = cwd.file_path:match("([^/]+)/?$") or ""
 	end
-	local palette = window:effective_config().resolved_palette
-	local fg = (palette and palette.foreground) or "#ffffff"
+	-- Grab the utf8 character for the "powerline" left facing solid arrow
+	local SOLID_LEFT_ARROW = utf8.char(0xe0b2)
+
+	-- Grab the current window's configuration
+	local color_scheme = window:effective_config().resolved_palette
+	local bg = color_scheme.background
+	local fg = color_scheme.foreground
 	window:set_right_status(wezterm.format({
+		-- arrow
+		{ Background = { Color = "none" } },
+		{ Foreground = { Color = bg } },
+		{ Text = SOLID_LEFT_ARROW },
+		-- text
+		{ Background = { Color = bg } },
 		{ Foreground = { Color = fg } },
 		{ Text = " " .. dir .. " " },
 	}))
@@ -115,8 +126,12 @@ local light_schemes = {
 }
 
 local all_schemes = {}
-for _, s in ipairs(dark_schemes) do table.insert(all_schemes, s) end
-for _, s in ipairs(light_schemes) do table.insert(all_schemes, s) end
+for _, s in ipairs(dark_schemes) do
+	table.insert(all_schemes, s)
+end
+for _, s in ipairs(light_schemes) do
+	table.insert(all_schemes, s)
+end
 
 wezterm.on("window-config-reloaded", function(window, _)
 	local current = (window:get_config_overrides() or {}).color_scheme
@@ -165,7 +180,8 @@ wezterm.on("augment-command-palette", function(_, _)
 		},
 		{
 			brief = "Theme: Toggle OS appearance matching ("
-				.. (wezterm.GLOBAL.follow_os_appearance and "on" or "off") .. ")",
+				.. (wezterm.GLOBAL.follow_os_appearance and "on" or "off")
+				.. ")",
 			icon = "md_theme_light_dark",
 			action = wezterm.action_callback(function(window, _)
 				wezterm.GLOBAL.follow_os_appearance = not wezterm.GLOBAL.follow_os_appearance
