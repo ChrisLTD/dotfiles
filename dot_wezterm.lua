@@ -112,6 +112,7 @@ local dark_schemes = {
 	"Monokai Vivid",
 	"Monokai Remastered",
 	"Railscasts (base16)",
+	"Unikitty Dark (base16)",
 }
 local light_schemes = {
 	--	"Catppuccin Latte",
@@ -136,6 +137,7 @@ local light_schemes = {
 	"Vs Code Light+ (Gogh)",
 	"Windows 95 Light (base16)",
 	"iTerm2 Light Background",
+	"Unikitty Light (base16)",
 }
 
 local all_schemes = {}
