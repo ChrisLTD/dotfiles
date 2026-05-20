@@ -6,7 +6,7 @@ local config = wezterm.config_builder()
 -- comment favorite themes out of random arrays below
 local fav_theme = { light = "Catppuccin Latte", dark = "Catppuccin Mocha" }
 if wezterm.GLOBAL.follow_os_appearance == nil then
-	wezterm.GLOBAL.follow_os_appearance = true
+	wezterm.GLOBAL.follow_os_appearance = false
 end
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
 
