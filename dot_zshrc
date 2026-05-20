@@ -9,6 +9,9 @@ export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
 eval "$(mise activate zsh)"
 export GOPRIVATE="github.com/measured-fi"
 
+# git-spice
+alias gs='gs'
+
 # claude alternative auth config
 alias claude-work='CLAUDE_CONFIG_DIR=~/.claude-business claude'
 

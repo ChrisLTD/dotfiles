@@ -74,3 +74,8 @@ fi
 if ! command -v goose >/dev/null; then
   go install github.com/pressly/goose/v3/cmd/goose@latest
 fi
+
+# git-spice — stacked PR manager (https://github.com/abhinav/git-spice)
+if ! command -v gs >/dev/null; then
+  go install go.abhg.dev/gs/cmd/gs@latest
+fi
