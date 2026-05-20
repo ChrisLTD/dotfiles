@@ -53,8 +53,9 @@ wezterm.on("update-right-status", function(window, pane)
 	if cwd then
 		dir = cwd.file_path:match("([^/]+)/?$") or ""
 	end
-	-- Grab the utf8 character for the "powerline" left facing solid arrow
-	local SOLID_LEFT_ARROW = utf8.char(0xe0b2)
+	-- Grab the utf8 character for the "powerline" solid angle
+	-- powerline symbols: https://github.com/ryanoasis/powerline-extra-symbols
+	local SYMBOL = utf8.char(0xe0ba)
 
 	-- Grab the current window's configuration
 	local color_scheme = window:effective_config().resolved_palette
@@ -64,7 +65,7 @@ wezterm.on("update-right-status", function(window, pane)
 		-- arrow
 		{ Background = { Color = "none" } },
 		{ Foreground = { Color = bg } },
-		{ Text = SOLID_LEFT_ARROW },
+		{ Text = SYMBOL },
 		-- text
 		{ Background = { Color = bg } },
 		{ Foreground = { Color = fg } },
