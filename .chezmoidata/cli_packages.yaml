@@ -13,6 +13,8 @@ cli_packages:
     dnf: bat
   - brew: eza
     dnf: eza
+  - brew: fd
+    dnf: fd-find
   - brew: fzf
     dnf: fzf
   - brew: gh
@@ -29,7 +31,7 @@ cli_packages:
     dnf: ripgrep
   - brew: tmux
     dnf: tmux
-  - brew: tree-sitter
+  - brew: tree-sitter-cli
     dnf: tree-sitter-cli
   - brew: zoxide
     dnf: zoxide

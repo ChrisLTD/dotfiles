@@ -5,7 +5,7 @@
   quotepath = false
   autocrlf = input
   editor = 'vim'
-	excludesfile = {{ .chezmoi.homeDir }}/.gitignore
+  excludesfile = {{ .chezmoi.homeDir }}/.gitignore
 [push]
   default = simple
   autoSetupRemote = true
@@ -20,7 +20,7 @@
   undo = reset HEAD~1 --mixed
   amend = commit -a --amend
   wipe = !git add -A && git commit -qm 'WIPE SAVEPOINT' && git reset HEAD~1 --hard
-  bclean = "!f() { git branch --merged ${1-master} | grep -v " ${1-master}$" | xargs -r g:it branch -d; }; f"
+  bclean = "!f() { git branch --merged ${1-master} | grep -v \" ${1-master}$\" | xargs -r git branch -d; }; f"
   bdone = "!f() { git checkout ${1-master} && git up && git bclean ${1-master}; }; f"
   st = status
   logp = log --pretty=oneline --max-count=20

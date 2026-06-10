@@ -30,13 +30,13 @@ mapfile -t SHARED_DNF < <("$CHEZMOI" execute-template '{{ range .cli_packages }}
 # omitted here. gcc/make come from Xcode CLT on Mac, not the Brewfile.
 # rust+cargo are needed for the cargo-installed tools below.
 TOOLBOX_ONLY=(
-  fd-find
   zsh
   gcc
   make
   python3-pip
   rust
   cargo
+  wl-clipboard
 )
 
 sudo dnf install -y "${SHARED_DNF[@]}" "${TOOLBOX_ONLY[@]}"
