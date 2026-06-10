@@ -1,6 +1,6 @@
 ---
 name: copilot-review
-description: Second-opinion reviewer using GitHub Copilot CLI. Use before merging large changes or committing to a plan.
+description: Manual invocation only. Prefer codex-review.
 tools: Bash
 model: haiku
 ---
