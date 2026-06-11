@@ -8,9 +8,9 @@
  * Requires Node >= 22.18 / 23.6 (native TypeScript type-stripping).
  * On older Node: npx tsx render_html.ts narrative.json
  *
- * Syntax highlighting is optional: if `highlight.js` resolves from the working
- * directory (npm i -D highlight.js), code is highlighted; otherwise it renders
- * as plain escaped <pre>. The output HTML has no network dependencies.
+ * Syntax highlighting happens in the browser via highlight.js from cdnjs
+ * (integrity-pinned). No local install needed; offline viewing degrades
+ * gracefully to plain unhighlighted code.
  *
  * Input schema (narrative.json):
  * {
@@ -42,8 +42,6 @@
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { createRequire } from "node:module";
-import { join } from "node:path";
 import { parseArgs } from "node:util";
 
 type Status = "added" | "modified" | "moved" | "deleted" | "context";
@@ -76,31 +74,30 @@ interface Narrative {
 
 // ---------------------------------------------------------------- highlighting
 
-type Highlighter = (code: string, language: string) => string | null;
+// Highlighting runs in the browser via the cdnjs bundle loaded at the bottom
+// of the page. Languages outside the common bundle (dockerfile, elixir, ...)
+// get an extra per-language script tag, generated from the block languages.
+const CDN_BASE = "https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.11.1";
+const HLJS_CDN = `${CDN_BASE}/highlight.min.js`;
+const HLJS_SRI = "sha512-EBLzUL8XLl+va/zAsmXwS7Z2B1F9HUHkZwyS/VKwh3S7T/U0nF4BaU29EP/ZSf6zgiIxYAnKLu6bJ8dqpmX5uw==";
 
-async function loadHighlighter(): Promise<Highlighter> {
-  try {
-    // Resolve from the working directory, not the script's own directory —
-    // this script lives in ~/.claude/skills/, but highlight.js is installed
-    // in the project being reviewed.
-    const requireFromCwd = createRequire(join(process.cwd(), "package.json"));
-    const mod = requireFromCwd("highlight.js");
-    const hljs = (mod.default ?? mod) as typeof import("highlight.js").default;
-    const aliases: Record<string, string> = { tsx: "typescript", jsx: "javascript" };
-    return (code, language) => {
-      const lang = aliases[language] ?? language;
-      try {
-        if (lang && hljs.getLanguage(lang)) {
-          return hljs.highlight(code, { language: lang }).value;
-        }
-        return hljs.highlightAuto(code).value;
-      } catch {
-        return null;
-      }
-    };
-  } catch {
-    return () => null;
+// Names and aliases the common bundle registers (extracted from highlight.min.js 11.11.1).
+const BUNDLED_LANGS = new Set(["atom","bash","c","c#","c++","cc","cjs","console","cpp","cs","csharp","css","cts","cxx","diff","gemspec","go","golang","gql","graphql","gyp","h","h++","hh","hpp","html","hxx","ini","ipython","irb","java","javascript","js","json","jsonc","jsp","jsx","kotlin","kt","kts","less","lua","mak","make","makefile","markdown","md","mjs","mk","mkd","mkdown","mm","mts","obj-c","obj-c++","objc","objective-c++","objectivec","patch","perl","php","php-template","pl","plaintext","plist","pluto","pm","podspec","py","pycon","python","python-repl","r","rb","rs","rss","ruby","rust","scss","sh","shell","shellsession","sql","svg","swift","text","thor","toml","ts","tsx","txt","typescript","vb","vbnet","wasm","wsf","xhtml","xjb","xml","xsd","xsl","yaml","yml","zsh"]);
+
+/** Script tags for block languages the common bundle doesn't cover. */
+function extraLanguageTags(chapters: Chapter[]): string {
+  const extra = new Set<string>();
+  for (const ch of chapters) {
+    for (const b of ch.blocks ?? []) {
+      const lang = b.language?.toLowerCase();
+      // Strict charset check doubles as URL sanitization.
+      if (lang && !BUNDLED_LANGS.has(lang) && /^[a-z0-9-]+$/.test(lang)) extra.add(lang);
+    }
   }
+  return [...extra]
+    .sort()
+    .map((l) => `<script src="${CDN_BASE}/languages/${l}.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>`)
+    .join("\n");
 }
 
 // ---------------------------------------------------------------- text helpers
@@ -131,7 +128,7 @@ function proseToHtml(text: string): string {
 
 // ---------------------------------------------------------------- renderers
 
-function renderBlock(b: Block, hl: Highlighter): string {
+function renderBlock(b: Block): string {
   const path = esc(b.path);
   const { start, end } = b;
   const ref =
@@ -142,11 +139,9 @@ function renderBlock(b: Block, hl: Highlighter): string {
         : path;
   const status = b.status ?? "modified";
   const note = b.note ? `<div class="block-note">${proseToHtml(b.note)}</div>` : "";
-  const highlighted = hl(b.code ?? "", b.language ?? "");
-  const codeHtml =
-    highlighted !== null
-      ? `<pre class="hl">${highlighted}</pre>`
-      : `<pre class="plain">${esc(b.code ?? "")}</pre>`;
+  const lang = b.language?.toLowerCase() ?? "";
+  const langClass = lang ? ` class="language-${esc(lang)}"` : "";
+  const codeHtml = `<pre class="hl"><code${langClass}>${esc(b.code ?? "")}</code></pre>`;
   const jump = `${b.path}:${start ?? 1}`;
   return `
 <figure class="code-block" data-status="${esc(status)}">
@@ -159,8 +154,8 @@ function renderBlock(b: Block, hl: Highlighter): string {
 </figure>`;
 }
 
-function renderChapter(i: number, ch: Chapter, total: number, hl: Highlighter): string {
-  const blocks = (ch.blocks ?? []).map((b) => renderBlock(b, hl)).join("\n");
+function renderChapter(i: number, ch: Chapter, total: number): string {
+  const blocks = (ch.blocks ?? []).map((b) => renderBlock(b)).join("\n");
   const concerns = ch.concerns?.length
     ? `
 <aside class="concerns">
@@ -206,11 +201,11 @@ const HLJS_CSS = `
 .hl .hljs-variable, .hl .hljs-name { color: #D6DEE6; }
 `;
 
-function render(data: Narrative, hl: Highlighter): string {
+function render(data: Narrative): string {
   const chapters = data.chapters ?? [];
   const total = chapters.length;
   const chaptersHtml = chapters
-    .map((ch, i) => renderChapter(i + 1, ch, total, hl))
+    .map((ch, i) => renderChapter(i + 1, ch, total))
     .join("\n");
   const dots = chapters
     .map(
@@ -407,8 +402,11 @@ ${appendix}
   </div>
 </section>
 </main>
+<script src="${HLJS_CDN}" integrity="${HLJS_SRI}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+${extraLanguageTags(chapters)}
 <script>
 (function () {
+  if (window.hljs) window.hljs.highlightAll();
   var chapters = Array.prototype.slice.call(document.querySelectorAll(".chapter"));
   var dots = Array.prototype.slice.call(document.querySelectorAll(".dot"));
   var current = 0;
@@ -477,14 +475,8 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   const data: Narrative = JSON.parse(readFileSync(input, "utf8"));
-  const hl = await loadHighlighter();
   const out = values.output ?? input.replace(/\.json$/, "") + ".html";
-  writeFileSync(out, render(data, hl));
-  if (hl("const x = 1", "ts") === null) {
-    console.error(
-      "note: highlight.js not found; code rendered without highlighting (npm i -D highlight.js to enable)",
-    );
-  }
+  writeFileSync(out, render(data));
   console.log(`wrote ${out}`);
 }
 

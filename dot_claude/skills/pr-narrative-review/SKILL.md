@@ -100,7 +100,7 @@ Two output modes. Ask only if the user hasn't indicated a preference and the cha
 node <skill-path>/scripts/render_html.ts .scratch/narrative.json -o .scratch/pr-<number>-narrative.html
 ```
 
-Requires Node ≥ 22.18 (native type-stripping); on older Node, use `npx tsx` instead of `node`. Syntax highlighting works when `highlight.js` resolves from the working directory (`npm i -D highlight.js`) and degrades gracefully to plain code without it.
+Requires Node ≥ 22.18 (native type-stripping); on older Node, use `npx tsx` instead of `node`. Syntax highlighting loads highlight.js from cdnjs in the browser — no local install needed; without network access the code renders plain.
 
 The script's header comment documents the full JSON schema. The essentials: top-level `title`, `entry_point`, `shape`, optional `pr_url`; a `chapters` array where each chapter has `title`, `prose` (paragraphs with `inline code`/**bold**/*em* only), optional per-chapter `concerns` (these render as a margin card beside the chapter — prefer attaching concerns to the chapter they belong to rather than one global list), and `blocks` with `path`, `start`, `end`, `status`, `language`, `code`, optional `note`. The `appendix` is a list of `{file, change}` pairs. The jump list is generated automatically from the first block of each chapter — don't build it by hand.
 
