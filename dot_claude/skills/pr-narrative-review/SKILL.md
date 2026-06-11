@@ -90,9 +90,9 @@ Before finishing, diff your document against the changeset: every file in the PR
 
 ## Output
 
-Two output modes. Ask only if the user hasn't indicated a preference and the changeset is large enough that the choice matters; otherwise default to markdown.
+Two output modes. Unless the user has already indicated a preference (e.g. they asked for a slideshow, or for a markdown doc), ask them which they want before writing the narrative — use the AskUserQuestion tool with the two options, noting that HTML gives a two-pane reader to flip through and markdown stays in the editor/terminal. Ask early (right after Step 1), so the answer is in hand by the time the narrative is written.
 
-**Markdown (default):** write the document to `.scratch/pr-<number>-narrative.md` (or `.scratch/<branch>-narrative.md` when there's no PR number) at the repo root, creating `.scratch/` if needed, and tell the user where it is. For small changesets (roughly under 150 changed lines), it's fine to also render it directly in the conversation.
+**Markdown:** write the document to `.scratch/pr-<number>-narrative.md` (or `.scratch/<branch>-narrative.md` when there's no PR number) at the repo root, creating `.scratch/` if needed, and tell the user where it is. For small changesets (roughly under 150 changed lines), it's fine to also render it directly in the conversation.
 
 **HTML reader:** when the user asks for HTML, a slideshow, a side-by-side view, or something to "flip through", produce `.scratch/narrative.json` and render it with the bundled script:
 

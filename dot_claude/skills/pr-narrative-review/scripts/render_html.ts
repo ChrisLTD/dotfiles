@@ -164,7 +164,7 @@ function renderChapter(i: number, ch: Chapter, total: number): string {
 </aside>`
     : "";
   return `
-<section class="chapter" id="ch-${i}" data-index="${i}">
+<section class="chapter" id="ch-${i}" data-slide="${i}">
   <div class="pane pane-code">${blocks || "<p class='no-code'>No code in this chapter.</p>"}</div>
   <div class="pane pane-prose">
     <header class="chapter-head">
@@ -207,27 +207,36 @@ function render(data: Narrative): string {
   const chaptersHtml = chapters
     .map((ch, i) => renderChapter(i + 1, ch, total))
     .join("\n");
-  const dots = chapters
-    .map(
-      (ch, i) =>
-        `<a href='#ch-${i + 1}' class='dot' data-index='${i + 1}' title='${esc(ch.title)}'><span>${i + 1}</span></a>`,
-    )
-    .join("\n");
   const appendixRows = (data.appendix ?? [])
     .map(
       (a) =>
         `<tr><td><code>${esc(a.file)}</code></td><td>${esc(a.change)}</td></tr>`,
     )
     .join("\n");
+  // Slides: 0 = masthead, 1..N = chapters, then appendix (if any), then jump list.
+  const appendixSlide = total + 1;
+  const jumpSlide = appendixRows ? total + 2 : total + 1;
   const appendix = appendixRows
     ? `
-<section class="endmatter">
+<section class="endmatter" id="appendix" data-slide="${appendixSlide}">
   <div class="endmatter-inner">
     <h2>Appendix: mechanical changes</h2>
     <table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>${appendixRows}</tbody></table>
   </div>
 </section>`
     : "";
+  const dotEntries = [
+    { href: "#top", label: "⌂", title: "Top" },
+    ...chapters.map((ch, i) => ({ href: `#ch-${i + 1}`, label: String(i + 1), title: ch.title })),
+    ...(appendixRows ? [{ href: "#appendix", label: "A", title: "Appendix: mechanical changes" }] : []),
+    { href: "#jump", label: "J", title: "Jump list" },
+  ];
+  const dots = dotEntries
+    .map(
+      (d, i) =>
+        `<a href='${d.href}' class='dot' data-slide='${i}' title='${esc(d.title)}'><span>${esc(d.label)}</span></a>`,
+    )
+    .join("\n");
   const jump = buildJumpList(chapters);
   const title = esc(data.title ?? "PR narrative");
   const prLink = data.pr_url
@@ -377,10 +386,10 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
 </head>
 <body>
 <div class="progress" id="progress"></div>
-<header class="masthead">
+<header class="masthead" id="top" data-slide="0">
   <div class="m-left">
     <div class="shape">${esc(data.shape ?? "")}</div>
-    <div class="kbd-hint"><kbd>j</kbd>/<kbd>k</kbd> or <kbd>←</kbd>/<kbd>→</kbd> flip chapters · click a reference to copy <span style="font-family:var(--mono)">path:line</span></div>
+    <div class="kbd-hint"><kbd>j</kbd>/<kbd>k</kbd> or <kbd>↓</kbd>/<kbd>↑</kbd> flip slides · click a reference to copy <span style="font-family:var(--mono)">path:line</span></div>
   </div>
   <div class="m-right">
     <div class="eyebrow">Narrative review</div>
@@ -393,7 +402,7 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
 <main id="main">
 ${chaptersHtml}
 ${appendix}
-<section class="endmatter">
+<section class="endmatter" id="jump" data-slide="${jumpSlide}">
   <div class="endmatter-inner">
     <h2>Jump list</h2>
     <p class="jump-help">Quickfix format — save and <code>:cfile</code> it to walk the PR in your editor.</p>
@@ -407,30 +416,30 @@ ${extraLanguageTags(chapters)}
 <script>
 (function () {
   if (window.hljs) window.hljs.highlightAll();
-  var chapters = Array.prototype.slice.call(document.querySelectorAll(".chapter"));
+  var slides = Array.prototype.slice.call(document.querySelectorAll("[data-slide]")).filter(function (el) { return !el.classList.contains("dot"); });
   var dots = Array.prototype.slice.call(document.querySelectorAll(".dot"));
   var current = 0;
 
   function go(i) {
-    if (i < 0 || i >= chapters.length) return;
-    chapters[i].scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    if (i < 0 || i >= slides.length) return;
+    slides[i].scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }
 
   document.addEventListener("keydown", function (e) {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-    if (e.key === "j" || e.key === "ArrowRight") { e.preventDefault(); go(current + 1); }
-    if (e.key === "k" || e.key === "ArrowLeft") { e.preventDefault(); go(current - 1); }
+    if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); go(current + 1); }
+    if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); go(current - 1); }
   });
 
   var obs = new IntersectionObserver(function (entries) {
     entries.forEach(function (en) {
       if (en.isIntersecting) {
-        current = parseInt(en.target.dataset.index, 10) - 1;
+        current = parseInt(en.target.dataset.slide, 10);
         dots.forEach(function (d, di) { d.classList.toggle("active", di === current); });
       }
     });
   }, { threshold: 0.5 });
-  chapters.forEach(function (c) { obs.observe(c); });
+  slides.forEach(function (s) { obs.observe(s); });
 
   window.addEventListener("scroll", function () {
     var h = document.documentElement;
