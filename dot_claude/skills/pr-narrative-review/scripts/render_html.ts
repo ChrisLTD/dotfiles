@@ -461,7 +461,7 @@ ${chaptersHtml}
 <section class="endmatter" id="end" data-slide="${endSlide}">
   <div class="endmatter-inner">${appendixHtml}
     <h2>Jump list</h2>
-    <p class="jump-help">Quickfix format — save and <code>:cfile</code> it to walk the PR in your editor.</p>
+    <p class="jump-help">Quickfix format — copy, then <code>:cexpr @+</code> in Neovim to walk the PR in narrative order.</p>
     <pre class="jumplist" id="jumplist">${esc(jump)}</pre>
     <button class="copy-jump" data-copy="jumplist">Copy jump list</button>
     ${endLinks}

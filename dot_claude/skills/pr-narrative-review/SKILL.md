@@ -84,7 +84,7 @@ Rules for code blocks:
 - **Include a few lines of unchanged context** when a hunk is incomprehensible without it, and say that you're doing so ("for context, the surrounding function:").
 - **Trim aggressively.** A 60-line hunk where 8 lines matter should show the 8 lines with an ellipsis comment, with the full range still given in the reference so the reader can see the rest in their editor.
 
-The **jump list** at the end is a plain-text block, one entry per chapter, in `file:line: title` format (the standard grep/quickfix format). Editor users can load it directly (e.g. Vim's `:cfile`) and step through the PR in narrative order inside their editor.
+The **jump list** at the end is a plain-text block, one entry per chapter, in `file:line: title` format (the standard grep/quickfix format). Editor users can load it straight from the clipboard (Neovim: `:cexpr @+`) or from a saved file (`:cfile`) and step through the PR in narrative order inside their editor.
 
 ## Step 5: Verify coverage
 
