@@ -79,6 +79,7 @@ Rules for code blocks:
 - **Show post-change code.** The narrative describes the codebase as it will be. When the old code matters for comprehension (a subtle behavioral change), describe the old behavior in prose, or show a small before/after pair — but make "after" the default.
 - **Reference format is `path:start-end` with line numbers in the post-change file**, so the reference is jumpable after checking out the branch. Verify line numbers against the actual head-ref files, not against hunk headers arithmetic — off-by-a-few references erode all trust in the document.
 - **Mark each block** as *(added)*, *(modified)*, *(moved from old/path.ts)*, or for deletions, describe them in prose with a reference into the base ref.
+- **Point at the changed lines inside modified blocks.** A modified block shown as clean post-change code hides where the change is. In HTML mode, set `changed_lines` (1-based offsets within the snippet, derived from the diff hunks) so those lines render tinted. In markdown mode, name the changed lines in the prose ("the guard on lines 4–5 is new").
 - **Include a few lines of unchanged context** when a hunk is incomprehensible without it, and say that you're doing so ("for context, the surrounding function:").
 - **Trim aggressively.** A 60-line hunk where 8 lines matter should show the 8 lines with an ellipsis comment, with the full range still given in the reference so the reader can see the rest in their editor.
 

@@ -33,6 +33,7 @@
  *           "status": "added | modified | moved | deleted | context",
  *           "language": "ts",
  *           "code": "post-change code...",
+ *           "changed_lines": [3, 4],
  *           "note": "optional caption under the block"
  *         }
  *       ]
@@ -42,6 +43,10 @@
  * }
  *
  * The jump list (quickfix format) is generated automatically from chapters.
+ *
+ * `changed_lines` (optional, for modified blocks): 1-based line offsets within
+ * `code` that differ from the base ref. They render as tinted stripes behind
+ * the code so the reader sees where the change is inside surrounding context.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -56,6 +61,7 @@ interface Block {
   status?: Status;
   language?: string;
   code?: string;
+  changed_lines?: number[];
   note?: string;
 }
 
@@ -147,7 +153,16 @@ function renderBlock(b: Block): string {
   const note = b.note ? `<div class="block-note">${proseToHtml(b.note)}</div>` : "";
   const lang = b.language?.toLowerCase() ?? "";
   const langClass = lang ? ` class="language-${esc(lang)}"` : "";
-  const codeHtml = `<pre class="hl"><code${langClass}>${esc(b.code ?? "")}</code></pre>`;
+  // Tint stripes are positioned siblings, not markup inside <code> — hljs
+  // replaces the code element's innerHTML at highlight time and would destroy
+  // per-line spans. Offsets must match pre.hl's font-size × line-height
+  // (0.8rem × 1.55 = 1.24rem per line, 0.2rem top padding) in the CSS below.
+  const lineCount = (b.code ?? "").split("\n").length;
+  const tints = (b.changed_lines ?? [])
+    .filter((n) => Number.isInteger(n) && n >= 1 && n <= lineCount)
+    .map((n) => `<i class="line-tint" style="top: calc(0.2rem + ${((n - 1) * 1.24).toFixed(2)}rem)"></i>`)
+    .join("");
+  const codeHtml = `<div class="code-wrap">${tints ? `<div class="line-tints" aria-hidden="true">${tints}</div>` : ""}<pre class="hl"><code${langClass}>${esc(b.code ?? "")}</code></pre></div>`;
   const jump = `${b.path}:${start ?? 1}`;
   return `
 <figure class="code-block" data-status="${esc(status)}">
@@ -346,6 +361,10 @@ pre.hl, pre.plain {
 .code-block[data-status="added"] pre { border-left-color: var(--added); }
 .code-block[data-status="deleted"] pre { border-left-color: var(--deleted); }
 .code-block[data-status="modified"] pre { border-left-color: var(--modified); }
+.code-wrap { position: relative; }
+.line-tints { position: absolute; inset: 0; pointer-events: none; }
+/* Stripe height/offsets are coupled to pre.hl font-size (0.8rem) and line-height (1.55). */
+.line-tint { position: absolute; left: 0; right: 0; height: 1.24rem; background: rgba(138, 109, 47, 0.22); }
 .block-note { font-family: var(--sans); font-size: 0.76rem; color: #98A4B0; margin-top: 0.5rem; max-width: 60ch; }
 .block-note p { margin: 0; }
 .no-code { color: #6B7684; font-family: var(--mono); font-size: 0.8rem; }
