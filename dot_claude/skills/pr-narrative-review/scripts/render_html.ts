@@ -17,8 +17,6 @@
  *   "title": "PR title",
  *   "pr_url": "https://github.com/... (optional)",
  *   "branch": "feature/foo (optional head branch name)",
- *   "ticket_url": "https://linear.app/... (optional issue-tracker link)",
- *   "ticket_label": "ENG-123 (optional, defaults to 'Ticket')",
  *   "entry_point": "Why the story starts where it does.",
  *   "shape": "6 files, ~76 lines. One sentence on the architecture.",
  *   "chapters": [
@@ -82,8 +80,6 @@ interface Narrative {
   title?: string;
   pr_url?: string;
   branch?: string;
-  ticket_url?: string;
-  ticket_label?: string;
   entry_point?: string;
   shape?: string;
   chapters?: Chapter[];
@@ -277,7 +273,6 @@ function render(data: Narrative): string {
   const endLinkItems = [
     ...(branchChip ? [branchChip] : []),
     ...(data.pr_url ? [`<a href="${esc(data.pr_url)}">View PR ↗</a>`] : []),
-    ...(data.ticket_url ? [`<a href="${esc(data.ticket_url)}">${esc(data.ticket_label ?? "Ticket")} ↗</a>`] : []),
   ];
   const endLinks = endLinkItems.length
     ? `<p class="end-links">${endLinkItems.join("\n")}</p>`
