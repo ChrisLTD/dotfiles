@@ -34,6 +34,7 @@
  *           "language": "ts",
  *           "code": "post-change code...",
  *           "changed_lines": [3, 4],
+ *           "diff": "@@ -12,4 +12,5 @@ ... (optional trimmed unified hunk)",
  *           "note": "optional caption under the block"
  *         }
  *       ]
@@ -47,6 +48,10 @@
  * `changed_lines` (optional, for modified blocks): 1-based line offsets within
  * `code` that differ from the base ref. They render as tinted stripes behind
  * the code so the reader sees where the change is inside surrounding context.
+ *
+ * `diff` (optional, for modified blocks worth scrutiny): the unified hunk for
+ * the shown range, taken from git and trimmed. Adds a "view diff" toggle to
+ * the block; the after-view stays the default.
  */
 
 import { readFileSync, writeFileSync } from "node:fs";
@@ -62,6 +67,7 @@ interface Block {
   language?: string;
   code?: string;
   changed_lines?: number[];
+  diff?: string;
   note?: string;
 }
 
@@ -163,14 +169,22 @@ function renderBlock(b: Block): string {
     .map((n) => `<i class="line-tint" style="top: calc(0.2rem + ${((n - 1) * 1.24).toFixed(2)}rem)"></i>`)
     .join("");
   const codeHtml = `<div class="code-wrap">${tints ? `<div class="line-tints" aria-hidden="true">${tints}</div>` : ""}<pre class="hl"><code${langClass}>${esc(b.code ?? "")}</code></pre></div>`;
+  const diffView = b.diff
+    ? `<pre class="hl diff-view"><code class="language-diff">${esc(b.diff)}</code></pre>`
+    : "";
+  const toggle = b.diff
+    ? `<button class="view-toggle" role="switch" aria-checked="false" title="Toggle after/diff view"><span class="vt-opt active">after</span><span class="vt-opt">diff</span></button>`
+    : "";
   const jump = `${b.path}:${start ?? 1}`;
   return `
 <figure class="code-block" data-status="${esc(status)}">
   <figcaption>
     <button class="ref" title="Copy ${esc(jump)}" data-jump="${esc(jump)}">${ref}</button>
     <span class="badge badge-${esc(status)}">${esc(status)}</span>
+    ${toggle}
   </figcaption>
   ${codeHtml}
+  ${diffView}
   ${note}
 </figure>`;
 }
@@ -361,6 +375,12 @@ pre.hl, pre.plain {
 .code-block[data-status="added"] pre { border-left-color: var(--added); }
 .code-block[data-status="deleted"] pre { border-left-color: var(--deleted); }
 .code-block[data-status="modified"] pre { border-left-color: var(--modified); }
+.view-toggle { margin-left: auto; display: inline-flex; gap: 2px; background: #20262D; border: 1px solid #3A434E; border-radius: 9px; padding: 2px; cursor: pointer; font-family: var(--sans); font-size: 0.6rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.view-toggle:hover, .view-toggle:focus-visible { border-color: #5A6678; }
+.view-toggle .vt-opt { padding: 1px 7px; border-radius: 7px; color: #98A4B0; transition: background 120ms, color 120ms; }
+.view-toggle .vt-opt.active { background: var(--accent); color: #fff; }
+.code-block.show-diff .code-wrap { display: none; }
+.code-block:not(.show-diff) .diff-view { display: none; }
 .code-wrap { position: relative; }
 .line-tints { position: absolute; inset: 0; pointer-events: none; }
 /* Stripe height/offsets are coupled to pre.hl font-size (0.8rem) and line-height (1.55). */
@@ -505,6 +525,15 @@ ${extraLanguageTags(chapters)}
   }
   document.querySelectorAll(".ref").forEach(function (btn) {
     btn.addEventListener("click", function () { copy(btn.dataset.jump, btn, "copied"); });
+  });
+  document.querySelectorAll(".view-toggle").forEach(function (btn) {
+    var opts = btn.querySelectorAll(".vt-opt");
+    btn.addEventListener("click", function () {
+      var showDiff = btn.closest("figure").classList.toggle("show-diff");
+      btn.setAttribute("aria-checked", showDiff ? "true" : "false");
+      opts[0].classList.toggle("active", !showDiff);
+      opts[1].classList.toggle("active", showDiff);
+    });
   });
   var cj = document.querySelector(".copy-jump");
   if (cj) cj.addEventListener("click", function () {
