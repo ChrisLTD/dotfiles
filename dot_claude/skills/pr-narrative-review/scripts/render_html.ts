@@ -16,6 +16,7 @@
  * {
  *   "title": "PR title",
  *   "pr_url": "https://github.com/... (optional)",
+ *   "branch": "feature/foo (optional head branch name)",
  *   "ticket_url": "https://linear.app/... (optional issue-tracker link)",
  *   "ticket_label": "ENG-123 (optional, defaults to 'Ticket')",
  *   "entry_point": "Why the story starts where it does.",
@@ -68,6 +69,7 @@ interface Chapter {
 interface Narrative {
   title?: string;
   pr_url?: string;
+  branch?: string;
   ticket_url?: string;
   ticket_label?: string;
   entry_point?: string;
@@ -240,7 +242,11 @@ function render(data: Narrative): string {
   const prLink = data.pr_url
     ? `<a class='pr-link' href='${esc(data.pr_url)}'>View PR ↗</a>`
     : "";
+  const branchChip = data.branch
+    ? `<code class="branch-chip">${esc(data.branch)}</code>`
+    : "";
   const endLinkItems = [
+    ...(branchChip ? [branchChip] : []),
     ...(data.pr_url ? [`<a href="${esc(data.pr_url)}">View PR ↗</a>`] : []),
     ...(data.ticket_url ? [`<a href="${esc(data.ticket_url)}">${esc(data.ticket_label ?? "Ticket")} ↗</a>`] : []),
   ];
@@ -378,6 +384,9 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
 .end-links { margin-top: 2.2rem; padding-top: 1.2rem; border-top: 1px solid var(--paper-edge); font-family: var(--sans); font-size: 0.85rem; }
 .end-links a { color: var(--accent); text-decoration: none; margin-right: 1.4rem; }
 .end-links a:hover { text-decoration: underline; }
+.branch-chip { font-family: var(--mono); font-size: 0.78rem; color: var(--accent); background: #ECEAE2; padding: 2px 8px; border-radius: 3px; }
+.end-links .branch-chip { margin-right: 1.4rem; }
+.masthead-branch { margin-bottom: 1rem; }
 
 @media (max-width: 880px) {
   header.masthead, .chapter { grid-template-columns: 1fr; }
@@ -402,6 +411,7 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
   <div class="m-right">
     <div class="eyebrow">Narrative review</div>
     <h1>${title}</h1>
+    ${branchChip ? `<div class="masthead-branch">${branchChip}</div>` : ""}
     <div class="entry-point"><strong>Entry point.</strong> ${esc(data.entry_point ?? "")}</div>
     ${prLink}
   </div>
