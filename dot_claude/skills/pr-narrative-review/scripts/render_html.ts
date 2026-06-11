@@ -16,6 +16,8 @@
  * {
  *   "title": "PR title",
  *   "pr_url": "https://github.com/... (optional)",
+ *   "ticket_url": "https://linear.app/... (optional issue-tracker link)",
+ *   "ticket_label": "ENG-123 (optional, defaults to 'Ticket')",
  *   "entry_point": "Why the story starts where it does.",
  *   "shape": "6 files, ~76 lines. One sentence on the architecture.",
  *   "chapters": [
@@ -66,6 +68,8 @@ interface Chapter {
 interface Narrative {
   title?: string;
   pr_url?: string;
+  ticket_url?: string;
+  ticket_label?: string;
   entry_point?: string;
   shape?: string;
   chapters?: Chapter[];
@@ -213,23 +217,17 @@ function render(data: Narrative): string {
         `<tr><td><code>${esc(a.file)}</code></td><td>${esc(a.change)}</td></tr>`,
     )
     .join("\n");
-  // Slides: 0 = masthead, 1..N = chapters, then appendix (if any), then jump list.
-  const appendixSlide = total + 1;
-  const jumpSlide = appendixRows ? total + 2 : total + 1;
-  const appendix = appendixRows
+  // Slides: 0 = masthead, 1..N = chapters, end matter (appendix + jump list) last.
+  const endSlide = total + 1;
+  const appendixHtml = appendixRows
     ? `
-<section class="endmatter" id="appendix" data-slide="${appendixSlide}">
-  <div class="endmatter-inner">
     <h2>Appendix: mechanical changes</h2>
-    <table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>${appendixRows}</tbody></table>
-  </div>
-</section>`
+    <table><thead><tr><th>File</th><th>Change</th></tr></thead><tbody>${appendixRows}</tbody></table>`
     : "";
   const dotEntries = [
     { href: "#top", label: "⌂", title: "Top" },
     ...chapters.map((ch, i) => ({ href: `#ch-${i + 1}`, label: String(i + 1), title: ch.title })),
-    ...(appendixRows ? [{ href: "#appendix", label: "A", title: "Appendix: mechanical changes" }] : []),
-    { href: "#jump", label: "J", title: "Jump list" },
+    { href: "#end", label: "J", title: appendixRows ? "Appendix & jump list" : "Jump list" },
   ];
   const dots = dotEntries
     .map(
@@ -241,6 +239,13 @@ function render(data: Narrative): string {
   const title = esc(data.title ?? "PR narrative");
   const prLink = data.pr_url
     ? `<a class='pr-link' href='${esc(data.pr_url)}'>View PR ↗</a>`
+    : "";
+  const endLinkItems = [
+    ...(data.pr_url ? [`<a href="${esc(data.pr_url)}">View PR ↗</a>`] : []),
+    ...(data.ticket_url ? [`<a href="${esc(data.ticket_url)}">${esc(data.ticket_label ?? "Ticket")} ↗</a>`] : []),
+  ];
+  const endLinks = endLinkItems.length
+    ? `<p class="end-links">${endLinkItems.join("\n")}</p>`
     : "";
 
   return `<!DOCTYPE html>
@@ -274,17 +279,17 @@ body { font-family: var(--serif); color: var(--ink); background: var(--paper); }
 
 .progress { position: fixed; top: 0; left: 0; height: 3px; background: var(--accent); width: 0; z-index: 30; transition: width 120ms linear; }
 
-header.masthead { display: grid; grid-template-columns: 55% 45%; min-height: 38vh; }
+header.masthead { display: grid; grid-template-columns: 55% 45%; min-height: 100vh; }
 .masthead .m-left {
   background: var(--terminal); color: var(--code-fg);
-  padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 3rem 2.5rem; display: flex; flex-direction: column; justify-content: flex-start;
   font-family: var(--mono); font-size: 0.85rem; line-height: 1.6;
 }
 .masthead .m-left .shape { color: #98A4B0; max-width: 38ch; }
 .masthead .m-left .kbd-hint { margin-top: 1.2rem; color: #6B7684; font-size: 0.75rem; }
 .masthead .m-left kbd { border: 1px solid #3A434E; border-radius: 3px; padding: 0 5px; font-family: var(--mono); }
 .masthead .m-right {
-  padding: 3rem 3rem 3rem 2.8rem; display: flex; flex-direction: column; justify-content: flex-end;
+  padding: 3rem 3rem 3rem 2.8rem; display: flex; flex-direction: column; justify-content: flex-start;
   border-bottom: 1px solid var(--paper-edge);
 }
 .eyebrow { font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--accent); margin-bottom: 0.8rem; }
@@ -359,10 +364,10 @@ nav.dots {
 }
 .dot.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
-.endmatter { border-top: 1px solid var(--paper-edge); padding: 3rem 0; }
-.endmatter-inner { max-width: 760px; margin: 0 auto; padding: 0 2rem; }
+.endmatter { border-top: 1px solid var(--paper-edge); padding: 2.6rem 0 3rem; min-height: 100vh; scroll-snap-align: start; }
+.endmatter-inner { max-width: 760px; margin: 0 auto; padding: 0 2rem; width: 100%; }
 .endmatter h2 { font-size: 1.25rem; margin-bottom: 0.9rem; }
-.endmatter table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+.endmatter table { border-collapse: collapse; width: 100%; font-size: 0.92rem; margin-bottom: 2.5rem; }
 .endmatter th { font-family: var(--sans); font-size: 0.7rem; letter-spacing: 0.1em; text-transform: uppercase; text-align: left; color: #6B7280; padding: 0.4rem 0.8rem 0.4rem 0; border-bottom: 1px solid var(--paper-edge); }
 .endmatter td { padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--paper-edge); }
 .endmatter td code { font-family: var(--mono); font-size: 0.82em; }
@@ -370,6 +375,9 @@ nav.dots {
 pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; background: var(--terminal); color: var(--code-fg); padding: 1rem 1.2rem; border-radius: 4px; overflow-x: auto; }
 .copy-jump { margin-top: 0.7rem; font-family: var(--sans); font-size: 0.78rem; background: var(--accent); color: #fff; border: none; padding: 0.45rem 0.9rem; border-radius: 4px; cursor: pointer; }
 .copy-jump.copied { background: var(--added); }
+.end-links { margin-top: 2.2rem; padding-top: 1.2rem; border-top: 1px solid var(--paper-edge); font-family: var(--sans); font-size: 0.85rem; }
+.end-links a { color: var(--accent); text-decoration: none; margin-right: 1.4rem; }
+.end-links a:hover { text-decoration: underline; }
 
 @media (max-width: 880px) {
   header.masthead, .chapter { grid-template-columns: 1fr; }
@@ -377,7 +385,7 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
   .pane-prose { order: 1; padding: 1.8rem 1.4rem; }
   .masthead .m-left { order: 2; padding: 1.5rem 1.4rem; min-height: 0; }
   .masthead .m-right { order: 1; padding: 2rem 1.4rem; }
-  .chapter { min-height: 0; }
+  header.masthead, .chapter, .endmatter { min-height: 0; }
   nav.dots { display: none; }
   main { scroll-snap-type: none; }
 }
@@ -401,13 +409,13 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
 <nav class="dots">${dots}</nav>
 <main id="main">
 ${chaptersHtml}
-${appendix}
-<section class="endmatter" id="jump" data-slide="${jumpSlide}">
-  <div class="endmatter-inner">
+<section class="endmatter" id="end" data-slide="${endSlide}">
+  <div class="endmatter-inner">${appendixHtml}
     <h2>Jump list</h2>
     <p class="jump-help">Quickfix format — save and <code>:cfile</code> it to walk the PR in your editor.</p>
     <pre class="jumplist" id="jumplist">${esc(jump)}</pre>
     <button class="copy-jump" data-copy="jumplist">Copy jump list</button>
+    ${endLinks}
   </div>
 </section>
 </main>
@@ -418,7 +426,18 @@ ${extraLanguageTags(chapters)}
   if (window.hljs) window.hljs.highlightAll();
   var slides = Array.prototype.slice.call(document.querySelectorAll("[data-slide]")).filter(function (el) { return !el.classList.contains("dot"); });
   var dots = Array.prototype.slice.call(document.querySelectorAll(".dot"));
-  var current = 0;
+
+  // Derive the current slide from scroll position: the last slide whose top
+  // is above the viewport's midline. Robust for slides taller or shorter
+  // than the viewport, unlike intersection-ratio tracking.
+  function currentIndex() {
+    var probe = window.scrollY + window.innerHeight / 2;
+    var idx = 0;
+    for (var i = 0; i < slides.length; i++) {
+      if (slides[i].offsetTop <= probe) idx = i;
+    }
+    return idx;
+  }
 
   function go(i) {
     if (i < 0 || i >= slides.length) return;
@@ -427,24 +446,21 @@ ${extraLanguageTags(chapters)}
 
   document.addEventListener("keydown", function (e) {
     if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
-    if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); go(current + 1); }
-    if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); go(current - 1); }
+    if (e.key === "j" || e.key === "ArrowDown") { e.preventDefault(); go(currentIndex() + 1); }
+    if (e.key === "k" || e.key === "ArrowUp") { e.preventDefault(); go(currentIndex() - 1); }
   });
 
-  var obs = new IntersectionObserver(function (entries) {
-    entries.forEach(function (en) {
-      if (en.isIntersecting) {
-        current = parseInt(en.target.dataset.slide, 10);
-        dots.forEach(function (d, di) { d.classList.toggle("active", di === current); });
-      }
-    });
-  }, { threshold: 0.5 });
-  slides.forEach(function (s) { obs.observe(s); });
+  function syncDots() {
+    var c = currentIndex();
+    dots.forEach(function (d, di) { d.classList.toggle("active", di === c); });
+  }
+  syncDots();
 
   window.addEventListener("scroll", function () {
     var h = document.documentElement;
     var pct = (h.scrollTop) / (h.scrollHeight - h.clientHeight) * 100;
     document.getElementById("progress").style.width = pct + "%";
+    syncDots();
   }, { passive: true });
 
   function copy(text, el, cls) {
