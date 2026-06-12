@@ -27,6 +27,9 @@ alias pnx='pnpm dlx'
 alias ls='eza --group-directories-first --all'
 alias ll='eza -lah --git --group-directories-first'
 
+# git-spice (brew installs it as git-spice to avoid clashing with ghostscript)
+command -v git-spice >/dev/null && alias gs='git-spice'
+
 
 # The next line enables shell command completion for gcloud.
 if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"; fi
