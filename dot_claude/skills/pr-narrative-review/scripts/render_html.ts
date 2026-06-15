@@ -22,7 +22,7 @@
  *   "chapters": [
  *     {
  *       "title": "Chapter title",
- *       "prose": "Markdown-lite: paragraphs, `inline code`, **bold**, *em*.",
+ *       "prose": "A string (paragraphs separated by blank lines) or an array of paragraph strings. Markdown-lite: `inline code`, **bold**, *em*.",
  *       "concerns": ["Optional per-chapter scrutiny bullets."],
  *       "blocks": [
  *         {
@@ -71,7 +71,7 @@ interface Block {
 
 interface Chapter {
   title: string;
-  prose?: string;
+  prose?: string | string[];
   concerns?: string[];
   blocks?: Block[];
 }
@@ -126,7 +126,8 @@ function esc(s: string): string {
 }
 
 /** Minimal markdown: paragraphs, `inline code`, **bold**, *em*. Everything else escaped. */
-function proseToHtml(text: string): string {
+function proseToHtml(input: string | string[]): string {
+  const text = Array.isArray(input) ? input.join("\n\n") : input;
   return text
     .trim()
     .split(/\n\s*\n/)
