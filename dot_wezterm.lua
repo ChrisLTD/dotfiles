@@ -85,19 +85,9 @@ local function flash(window, text)
 	end)
 end
 
--- flash the cwd basename, branch, and active color scheme on demand. The scheme
--- is read from the resolved config so it reflects a random roll, not just a
--- manual override.
-local function show_status_info(window, pane)
-	local dir = pane_dir(pane)
-	local branch = pane_branch(pane)
-	local scheme = window:effective_config().color_scheme or "default"
-	local parts = { FOLDER_GLYPH .. " " .. dir }
-	if branch ~= "" then
-		table.insert(parts, BRANCH_GLYPH .. " " .. branch)
-	end
-	table.insert(parts, SCHEME_GLYPH .. " " .. scheme)
-	flash(window, "     " .. table.concat(parts, "   ") .. "  ")
+-- flash a scheme name in the left status, prefixed with the palette glyph
+local function flash_scheme(window, scheme)
+	flash(window, "     " .. SCHEME_GLYPH .. " " .. scheme .. "  ")
 end
 
 -- step forward/back through the active scheme list; assigned below the lists.
@@ -138,12 +128,6 @@ config.keys = {
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
 	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
 	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
-	{
-		-- flash cwd + branch + active scheme in the left status
-		key = "i",
-		mods = "CMD|SHIFT",
-		action = wezterm.action_callback(show_status_info),
-	},
 	-- step forward/back through the active color scheme list (CMD+SHIFT+< / >).
 	-- both glyph forms are bound since wezterm may report the key as the shifted
 	-- glyph (< >) or the base key (, .) depending on the setup.
@@ -153,7 +137,7 @@ config.keys = {
 	{ key = ",", mods = "CMD|SHIFT", action = scheme_prev },
 	{
 		-- toggle the right status between branch and cwd (per window)
-		key = "o",
+		key = "i",
 		mods = "CMD|SHIFT",
 		action = wezterm.action_callback(toggle_right_status),
 	},
@@ -171,7 +155,7 @@ config.keys = {
 	},
 }
 
--- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+O
+-- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+I
 -- toggles between the two per window
 wezterm.on("update-right-status", function(window, pane)
 	-- Grab the utf8 character for the "powerline" solid angle
@@ -312,7 +296,7 @@ cycle_scheme = function(window, delta)
 	end
 	local scheme = schemes[(idx - 1 + delta) % #schemes + 1]
 	window:set_config_overrides({ color_scheme = scheme })
-	flash(window, "     " .. SCHEME_GLYPH .. " " .. scheme .. "  ")
+	flash_scheme(window, scheme)
 end
 
 wezterm.on("window-config-reloaded", function(window, _)
@@ -329,14 +313,17 @@ wezterm.on("window-config-reloaded", function(window, _)
 	end
 	local scheme = schemes[math.random(#schemes)]
 	window:set_config_overrides({ color_scheme = scheme })
+	flash_scheme(window, scheme)
 end)
 
 wezterm.on("augment-command-palette", function(window, _)
 	return {
 		{
-			brief = "Show path, branch, and scheme",
-			icon = "md_folder_information",
-			action = wezterm.action_callback(show_status_info),
+			brief = "Scheme: " .. (window:effective_config().color_scheme or "default"),
+			icon = "md_palette",
+			action = wezterm.action_callback(function(win, _)
+				flash_scheme(win, win:effective_config().color_scheme or "default")
+			end),
 		},
 		{
 			brief = "Right status: switch to " .. (right_status_mode[window:window_id()] == "cwd" and "branch" or "cwd"),
