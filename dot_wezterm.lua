@@ -171,7 +171,7 @@ config.keys = {
 	},
 }
 
--- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+B
+-- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+O
 -- toggles between the two per window
 wezterm.on("update-right-status", function(window, pane)
 	-- Grab the utf8 character for the "powerline" solid angle
