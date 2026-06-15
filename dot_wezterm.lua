@@ -109,6 +109,13 @@ local scheme_prev = wezterm.action_callback(function(window, _)
 	cycle_scheme(window, -1)
 end)
 
+-- per-window right-status mode: "branch" (default, cwd fallback) or "cwd"
+local right_status_mode = {}
+local function toggle_right_status(window, _)
+	local id = window:window_id()
+	right_status_mode[id] = right_status_mode[id] == "cwd" and "branch" or "cwd"
+end
+
 config.font_size = 14
 config.inactive_pane_hsb = { saturation = 0.9, brightness = 0.9 }
 -- calt=contextual alternates, clig=contextual ligatures, liga=standard ligatures
@@ -145,6 +152,12 @@ config.keys = {
 	{ key = "<", mods = "CMD|SHIFT", action = scheme_prev },
 	{ key = ",", mods = "CMD|SHIFT", action = scheme_prev },
 	{
+		-- toggle the right status between branch and cwd (per window)
+		key = "o",
+		mods = "CMD|SHIFT",
+		action = wezterm.action_callback(toggle_right_status),
+	},
+	{
 		key = "w",
 		mods = "CMD",
 		action = wezterm.action_callback(function(window, pane)
@@ -158,10 +171,9 @@ config.keys = {
 	},
 }
 
--- show git branch (preferred) or cwd in right part of top bar
+-- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+B
+-- toggles between the two per window
 wezterm.on("update-right-status", function(window, pane)
-	local branch = pane_branch(pane)
-
 	-- Grab the utf8 character for the "powerline" solid angle
 	-- powerline symbols: https://github.com/ryanoasis/powerline-extra-symbols
 	local SYMBOL = utf8.char(0xe0ba)
@@ -171,8 +183,10 @@ wezterm.on("update-right-status", function(window, pane)
 	local bg = color_scheme.background
 	local fg = color_scheme.foreground
 
-	-- prefer the branch; fall back to the cwd basename only when not in a repo
+	-- branch mode prefers the branch and falls back to the cwd basename outside a
+	-- repo; cwd mode always shows the cwd basename
 	local text
+	local branch = right_status_mode[window:window_id()] ~= "cwd" and pane_branch(pane) or ""
 	if branch ~= "" then
 		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
 	else
@@ -317,12 +331,17 @@ wezterm.on("window-config-reloaded", function(window, _)
 	window:set_config_overrides({ color_scheme = scheme })
 end)
 
-wezterm.on("augment-command-palette", function(_, _)
+wezterm.on("augment-command-palette", function(window, _)
 	return {
 		{
 			brief = "Show path, branch, and scheme",
 			icon = "md_folder_information",
 			action = wezterm.action_callback(show_status_info),
+		},
+		{
+			brief = "Right status: switch to " .. (right_status_mode[window:window_id()] == "cwd" and "branch" or "cwd"),
+			icon = "md_swap_horizontal",
+			action = wezterm.action_callback(toggle_right_status),
 		},
 		{
 			brief = "Scheme: next",
