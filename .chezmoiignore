@@ -2,3 +2,5 @@
 scripts
 README.md
 CLAUDE.md
+.claude/settings.json
+.claude-business/settings.json
