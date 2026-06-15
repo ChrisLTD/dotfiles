@@ -27,20 +27,38 @@ end
 -- git branch for the pane's cwd ("" outside a repo), with the same prefix
 -- stripping as the nvim statusline, truncated to 25 chars. Only runs for local
 -- panes; for remote/SSH panes cwd.file_path is not a local path.
+--
+-- Result is cached per pane to keep git off the per-second status hot path:
+-- re-run only when the cwd changes or after BRANCH_TTL ticks (~5s, since
+-- update-right-status fires ~1/sec). A branch switch in place can therefore
+-- take up to BRANCH_TTL ticks to show.
+local BRANCH_TTL = 5
+local branch_cache = {}
+
 local function pane_branch(pane)
 	local cwd = pane:get_current_working_dir()
 	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
 		return ""
 	end
-	local ok, stdout = wezterm.run_child_process({
-		"git", "-C", cwd.file_path, "rev-parse", "--abbrev-ref", "HEAD",
-	})
-	if not ok then
-		return ""
+	local path = cwd.file_path
+	local id = pane:pane_id()
+	local cached = branch_cache[id]
+	if cached and cached.path == path and cached.ticks < BRANCH_TTL then
+		cached.ticks = cached.ticks + 1
+		return cached.branch
 	end
-	local branch = stdout:gsub("%s+$", "")
-	branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
-	return branch:sub(1, 25)
+
+	local branch = ""
+	local ok, stdout = wezterm.run_child_process({
+		"git", "-C", path, "rev-parse", "--abbrev-ref", "HEAD",
+	})
+	if ok then
+		branch = stdout:gsub("%s+$", "")
+		branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
+		branch = branch:sub(1, 25)
+	end
+	branch_cache[id] = { path = path, branch = branch, ticks = 0 }
+	return branch
 end
 
 -- flash branch + cwd basename in the left status. Drawn in-window rather than
