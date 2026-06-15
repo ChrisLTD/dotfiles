@@ -46,11 +46,13 @@ end
 local function show_path_info(window, pane)
 	local branch = pane_branch(pane)
 	local dir = pane_dir(pane)
+	local lpad = "     " -- 5 chars on the left
+	local rpad = "" -- no padding on the right
 	local text
 	if branch ~= "" then
-		text = " " .. BRANCH_GLYPH .. " " .. branch .. "  " .. FOLDER_GLYPH .. " " .. dir .. " "
+		text = lpad .. FOLDER_GLYPH .. " " .. dir .. "   " .. BRANCH_GLYPH .. " " .. branch .. rpad
 	else
-		text = " " .. FOLDER_GLYPH .. " " .. dir .. " "
+		text = lpad .. FOLDER_GLYPH .. " " .. dir .. rpad
 	end
 	window:set_left_status(wezterm.format({
 		{ Attribute = { Intensity = "Bold" } },
