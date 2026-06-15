@@ -99,7 +99,7 @@ config.keys = {
 	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
 	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
 	{
-		-- show full cwd + branch in a toast (status bar shows only the basename)
+		-- flash the cwd + branch in the left status (right status shows only the branch)
 		key = "i",
 		mods = "CMD|SHIFT",
 		action = wezterm.action_callback(show_path_info),
