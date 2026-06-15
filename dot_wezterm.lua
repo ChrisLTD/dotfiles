@@ -13,6 +13,7 @@ local is_mac = wezterm.target_triple:find("darwin") ~= nil
 -- glyphs: powerline branch + nerdfont folder
 local BRANCH_GLYPH = utf8.char(0xe0a0)
 local FOLDER_GLYPH = wezterm.nerdfonts.md_folder
+local SCHEME_GLYPH = wezterm.nerdfonts.md_palette
 
 -- basename of the pane's cwd ("" if unavailable or not a local path)
 local function pane_dir(pane)
@@ -62,26 +63,15 @@ local function pane_branch(pane)
 	return branch
 end
 
--- flash branch + cwd basename in the left status. Drawn in-window rather than
--- via toast_notification, which depends on macOS notification permissions.
+-- flash bold text in the left status for a few seconds. Drawn in-window rather
+-- than via toast_notification, which depends on macOS notification permissions.
 -- Per-window generation token so a later flash isn't cleared by an earlier timer.
 local flash_gen = {}
-local function show_path_info(window, pane)
-	local branch = pane_branch(pane)
-	local dir = pane_dir(pane)
-	local lpad = "     " -- 5 chars on the left
-	local rpad = "" -- no padding on the right
-	local text
-	if branch ~= "" then
-		text = lpad .. FOLDER_GLYPH .. " " .. dir .. "   " .. BRANCH_GLYPH .. " " .. branch .. rpad
-	else
-		text = lpad .. FOLDER_GLYPH .. " " .. dir .. rpad
-	end
+local function flash(window, text)
 	window:set_left_status(wezterm.format({
 		{ Attribute = { Intensity = "Bold" } },
 		{ Text = text },
 	}))
-	-- clear it again after a few seconds, unless a newer flash superseded this one
 	local id = window:window_id()
 	flash_gen[id] = (flash_gen[id] or 0) + 1
 	local gen = flash_gen[id]
@@ -93,6 +83,27 @@ local function show_path_info(window, pane)
 			end)
 		end
 	end)
+end
+
+-- flash a scheme name in the left status, prefixed with the palette glyph
+local function flash_scheme(window, scheme)
+	flash(window, "     " .. SCHEME_GLYPH .. " " .. scheme .. "  ")
+end
+
+-- step forward/back through the active scheme list; assigned below the lists.
+local cycle_scheme
+local scheme_next = wezterm.action_callback(function(window, _)
+	cycle_scheme(window, 1)
+end)
+local scheme_prev = wezterm.action_callback(function(window, _)
+	cycle_scheme(window, -1)
+end)
+
+-- per-window right-status mode: "branch" (default, cwd fallback) or "cwd"
+local right_status_mode = {}
+local function toggle_right_status(window, _)
+	local id = window:window_id()
+	right_status_mode[id] = right_status_mode[id] == "cwd" and "branch" or "cwd"
 end
 
 config.font_size = 14
@@ -117,11 +128,18 @@ config.keys = {
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
 	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
 	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
+	-- step forward/back through the active color scheme list (CMD+SHIFT+< / >).
+	-- both glyph forms are bound since wezterm may report the key as the shifted
+	-- glyph (< >) or the base key (, .) depending on the setup.
+	{ key = ">", mods = "CMD|SHIFT", action = scheme_next },
+	{ key = ".", mods = "CMD|SHIFT", action = scheme_next },
+	{ key = "<", mods = "CMD|SHIFT", action = scheme_prev },
+	{ key = ",", mods = "CMD|SHIFT", action = scheme_prev },
 	{
-		-- flash the cwd + branch in the left status (right status shows only the branch)
+		-- toggle the right status between branch and cwd (per window)
 		key = "i",
 		mods = "CMD|SHIFT",
-		action = wezterm.action_callback(show_path_info),
+		action = wezterm.action_callback(toggle_right_status),
 	},
 	{
 		key = "w",
@@ -137,10 +155,9 @@ config.keys = {
 	},
 }
 
--- show git branch (preferred) or cwd in right part of top bar
+-- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+I
+-- toggles between the two per window
 wezterm.on("update-right-status", function(window, pane)
-	local branch = pane_branch(pane)
-
 	-- Grab the utf8 character for the "powerline" solid angle
 	-- powerline symbols: https://github.com/ryanoasis/powerline-extra-symbols
 	local SYMBOL = utf8.char(0xe0ba)
@@ -150,8 +167,10 @@ wezterm.on("update-right-status", function(window, pane)
 	local bg = color_scheme.background
 	local fg = color_scheme.foreground
 
-	-- prefer the branch; fall back to the cwd basename only when not in a repo
+	-- branch mode prefers the branch and falls back to the cwd basename outside a
+	-- repo; cwd mode always shows the cwd basename
 	local text
+	local branch = right_status_mode[window:window_id()] ~= "cwd" and pane_branch(pane) or ""
 	if branch ~= "" then
 		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
 	else
@@ -245,19 +264,48 @@ for _, s in ipairs(light_schemes) do
 	table.insert(all_schemes, s)
 end
 
+-- the list both the random roller and the manual cycle draw from: the
+-- OS-appropriate list when following appearance, otherwise everything.
+local function active_schemes()
+	if wezterm.GLOBAL.follow_os_appearance then
+		local is_dark = wezterm.gui.get_appearance():find("Dark")
+		return is_dark and dark_schemes or light_schemes
+	end
+	return all_schemes
+end
+
+-- step delta places through active_schemes() from the current scheme, wrapping
+-- at the ends, and flash the name. No stored index: the position is derived from
+-- the current override each press, so it stays correct after a random roll. A
+-- scheme that's in the list is preserved by the roller's guard, so this doesn't
+-- get re-rolled out from under you.
+cycle_scheme = function(window, delta)
+	local schemes = active_schemes()
+	if #schemes == 0 then
+		return
+	end
+	local current = (window:get_config_overrides() or {}).color_scheme
+	-- when the current scheme isn't in the list, seed idx so the first press lands
+	-- on schemes[1] going forward and schemes[#schemes] going back.
+	local idx = delta > 0 and 0 or 1
+	for i, s in ipairs(schemes) do
+		if s == current then
+			idx = i
+			break
+		end
+	end
+	local scheme = schemes[(idx - 1 + delta) % #schemes + 1]
+	window:set_config_overrides({ color_scheme = scheme })
+	flash_scheme(window, scheme)
+end
+
 wezterm.on("window-config-reloaded", function(window, _)
 	local current = (window:get_config_overrides() or {}).color_scheme
 	if current == fav_theme.light or current == fav_theme.dark then
 		return
 	end
 
-	local schemes
-	if wezterm.GLOBAL.follow_os_appearance then
-		local is_dark = wezterm.gui.get_appearance():find("Dark")
-		schemes = is_dark and dark_schemes or light_schemes
-	else
-		schemes = all_schemes
-	end
+	local schemes = active_schemes()
 	for _, s in ipairs(schemes) do
 		if s == current then
 			return
@@ -265,14 +313,32 @@ wezterm.on("window-config-reloaded", function(window, _)
 	end
 	local scheme = schemes[math.random(#schemes)]
 	window:set_config_overrides({ color_scheme = scheme })
+	flash_scheme(window, scheme)
 end)
 
-wezterm.on("augment-command-palette", function(_, _)
+wezterm.on("augment-command-palette", function(window, _)
 	return {
 		{
-			brief = "Show current path + branch",
-			icon = "md_folder_information",
-			action = wezterm.action_callback(show_path_info),
+			brief = "Scheme: " .. (window:effective_config().color_scheme or "default"),
+			icon = "md_palette",
+			action = wezterm.action_callback(function(win, _)
+				flash_scheme(win, win:effective_config().color_scheme or "default")
+			end),
+		},
+		{
+			brief = "Right status: switch to " .. (right_status_mode[window:window_id()] == "cwd" and "branch" or "cwd"),
+			icon = "md_swap_horizontal",
+			action = wezterm.action_callback(toggle_right_status),
+		},
+		{
+			brief = "Scheme: next",
+			icon = "md_skip_next",
+			action = scheme_next,
+		},
+		{
+			brief = "Scheme: previous",
+			icon = "md_skip_previous",
+			action = scheme_prev,
 		},
 		{
 			brief = "Theme: " .. fav_theme.dark,
