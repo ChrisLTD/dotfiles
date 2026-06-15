@@ -99,11 +99,21 @@ local scheme_prev = wezterm.action_callback(function(window, _)
 	cycle_scheme(window, -1)
 end)
 
--- per-window right-status mode: "branch" (default, cwd fallback) or "cwd"
+-- per-window right-status mode, cycled by CMD+SHIFT+I:
+--   "branch" (default, cwd fallback) -> "cwd" -> "both" (cwd + branch)
+local right_status_modes = { "branch", "cwd", "both" }
 local right_status_mode = {}
+local function next_right_status(mode)
+	for i, m in ipairs(right_status_modes) do
+		if m == (mode or "branch") then
+			return right_status_modes[i % #right_status_modes + 1]
+		end
+	end
+	return right_status_modes[1]
+end
 local function toggle_right_status(window, _)
 	local id = window:window_id()
-	right_status_mode[id] = right_status_mode[id] == "cwd" and "branch" or "cwd"
+	right_status_mode[id] = next_right_status(right_status_mode[id])
 end
 
 config.font_size = 14
@@ -167,20 +177,26 @@ wezterm.on("update-right-status", function(window, pane)
 	local bg = color_scheme.background
 	local fg = color_scheme.foreground
 
-	-- branch mode prefers the branch and falls back to the cwd basename outside a
-	-- repo; cwd mode always shows the cwd basename
+	-- branch mode prefers the branch, falling back to the cwd basename outside a
+	-- repo; cwd mode always shows the cwd basename; both mode always shows cwd +
+	-- branch (with the branch truncated harder to keep it short)
+	local mode = right_status_mode[window:window_id()] or "branch"
+	local dir = pane_dir(pane)
+	local branch = mode ~= "cwd" and pane_branch(pane) or ""
+
+	-- on main/master the branch name says nothing about which repo/worktree this
+	-- is, so show cwd + branch like "both" mode
+	if mode == "branch" and (branch == "main" or branch == "master") then
+		mode = "both"
+	end
+
 	local text
-	local branch = right_status_mode[window:window_id()] ~= "cwd" and pane_branch(pane) or ""
-	if branch ~= "" then
-		-- on main the branch name says nothing about which repo/worktree this is,
-		-- so prepend the cwd basename to disambiguate
-		if branch == "main" then
-			text = " " .. FOLDER_GLYPH .. " " .. pane_dir(pane) .. " " .. BRANCH_GLYPH .. " " .. branch .. " "
-		else
-			text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
-		end
+	if mode == "cwd" or branch == "" then
+		text = " " .. FOLDER_GLYPH .. " " .. dir .. " "
+	elseif mode == "both" then
+		text = " " .. FOLDER_GLYPH .. " " .. dir .. " " .. BRANCH_GLYPH .. " " .. branch:sub(1, 13) .. " "
 	else
-		text = " " .. FOLDER_GLYPH .. " " .. pane_dir(pane) .. " "
+		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
 	end
 
 	window:set_right_status(wezterm.format({
@@ -332,7 +348,7 @@ wezterm.on("augment-command-palette", function(window, _)
 			end),
 		},
 		{
-			brief = "Right status: switch to " .. (right_status_mode[window:window_id()] == "cwd" and "branch" or "cwd"),
+			brief = "Right status: switch to " .. next_right_status(right_status_mode[window:window_id()]),
 			icon = "md_swap_horizontal",
 			action = wezterm.action_callback(toggle_right_status),
 		},
