@@ -20,7 +20,8 @@ local function pane_dir(pane)
 	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
 		return ""
 	end
-	return cwd.file_path:match("([^/]+)/?$") or ""
+	-- basename, or "/" when at the filesystem root
+	return cwd.file_path:match("([^/]+)/?$") or "/"
 end
 
 -- git branch for the pane's cwd ("" outside a repo), with the same prefix
@@ -67,7 +68,10 @@ local function show_path_info(window, pane)
 	local gen = flash_gen[id]
 	wezterm.time.call_after(5, function()
 		if flash_gen[id] == gen then
-			window:set_left_status("")
+			-- window may have been closed before the timer fires
+			pcall(function()
+				window:set_left_status("")
+			end)
 		end
 	end)
 end
