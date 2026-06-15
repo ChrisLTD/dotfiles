@@ -172,7 +172,13 @@ wezterm.on("update-right-status", function(window, pane)
 	local text
 	local branch = right_status_mode[window:window_id()] ~= "cwd" and pane_branch(pane) or ""
 	if branch ~= "" then
-		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
+		-- on main the branch name says nothing about which repo/worktree this is,
+		-- so prepend the cwd basename to disambiguate
+		if branch == "main" then
+			text = " " .. FOLDER_GLYPH .. " " .. pane_dir(pane) .. " " .. BRANCH_GLYPH .. " " .. branch .. " "
+		else
+			text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
+		end
 	else
 		text = " " .. FOLDER_GLYPH .. " " .. pane_dir(pane) .. " "
 	end

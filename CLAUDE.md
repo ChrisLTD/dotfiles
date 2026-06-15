@@ -11,7 +11,7 @@ This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both do
 | `dot_gitconfig.tmpl` | `~/.gitconfig` | Git config (email templated) |
 | `dot_tmux.conf` | `~/.tmux.conf` | Tmux config |
 | `dot_config/yazi/` | `~/.config/yazi/` | Yazi file manager config |
-| `dot_config/git/` | `~/.config/git/` | Global gitignore |
+| `dot_gitignore` | `~/.gitignore` | Global gitignore (wired via `core.excludesfile` in `dot_gitconfig.tmpl`) |
 | `dot_claude/` | `~/.claude/` | Claude Code settings, agents, commands |
 | `dot_Brewfile.tmpl` | `~/.Brewfile` | Homebrew bundle (Mac only). Templated — shared CLIs are rendered from `.chezmoidata/cli_packages.yaml` |
 | `.chezmoidata/cli_packages.yaml` | — | Source of truth for CLIs installed on both Mac (brew) and Fedora toolbox (dnf). Each entry has `brew:` and `dnf:` names |
