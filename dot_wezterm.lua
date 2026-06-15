@@ -279,8 +279,13 @@ end
 -- get re-rolled out from under you.
 cycle_scheme = function(window, delta)
 	local schemes = active_schemes()
+	if #schemes == 0 then
+		return
+	end
 	local current = (window:get_config_overrides() or {}).color_scheme
-	local idx = 0 -- 0 => first press lands on schemes[1]
+	-- when the current scheme isn't in the list, seed idx so the first press lands
+	-- on schemes[1] going forward and schemes[#schemes] going back.
+	local idx = delta > 0 and 0 or 1
 	for i, s in ipairs(schemes) do
 		if s == current then
 			idx = i
