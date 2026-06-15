@@ -10,6 +10,58 @@ if wezterm.GLOBAL.follow_os_appearance == nil then
 end
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
 
+-- glyphs: powerline branch + nerdfont folder
+local BRANCH_GLYPH = utf8.char(0xe0a0)
+local FOLDER_GLYPH = wezterm.nerdfonts.md_folder
+
+-- basename of the pane's cwd ("" if unavailable)
+local function pane_dir(pane)
+	local cwd = pane:get_current_working_dir()
+	if not cwd then
+		return ""
+	end
+	return cwd.file_path:match("([^/]+)/?$") or ""
+end
+
+-- git branch for the pane's cwd ("" outside a repo), with the same prefix
+-- stripping as the nvim statusline, truncated to 25 chars
+local function pane_branch(pane)
+	local cwd = pane:get_current_working_dir()
+	if not cwd then
+		return ""
+	end
+	local ok, stdout = wezterm.run_child_process({
+		"git", "-C", cwd.file_path, "rev-parse", "--abbrev-ref", "HEAD",
+	})
+	if not ok then
+		return ""
+	end
+	local branch = stdout:gsub("%s+$", "")
+	branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
+	return branch:sub(1, 25)
+end
+
+-- flash branch + cwd basename in the left status. Drawn in-window rather than
+-- via toast_notification, which depends on macOS notification permissions.
+local function show_path_info(window, pane)
+	local branch = pane_branch(pane)
+	local dir = pane_dir(pane)
+	local text
+	if branch ~= "" then
+		text = " " .. BRANCH_GLYPH .. " " .. branch .. "  " .. FOLDER_GLYPH .. " " .. dir .. " "
+	else
+		text = " " .. FOLDER_GLYPH .. " " .. dir .. " "
+	end
+	window:set_left_status(wezterm.format({
+		{ Attribute = { Intensity = "Bold" } },
+		{ Text = text },
+	}))
+	-- clear it again after a few seconds
+	wezterm.time.call_after(5, function()
+		window:set_left_status("")
+	end)
+end
+
 config.font_size = 14
 config.inactive_pane_hsb = { saturation = 0.9, brightness = 0.9 }
 -- calt=contextual alternates, clig=contextual ligatures, liga=standard ligatures
@@ -33,6 +85,12 @@ config.keys = {
 	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
 	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
 	{
+		-- show full cwd + branch in a toast (status bar shows only the basename)
+		key = "i",
+		mods = "CMD|SHIFT",
+		action = wezterm.action_callback(show_path_info),
+	},
+	{
 		key = "w",
 		mods = "CMD",
 		action = wezterm.action_callback(function(window, pane)
@@ -46,13 +104,10 @@ config.keys = {
 	},
 }
 
--- show cwd in right part of top bar
+-- show git branch (preferred) or cwd in right part of top bar
 wezterm.on("update-right-status", function(window, pane)
-	local dir = ""
-	local cwd = pane:get_current_working_dir()
-	if cwd then
-		dir = cwd.file_path:match("([^/]+)/?$") or ""
-	end
+	local branch = pane_branch(pane)
+
 	-- Grab the utf8 character for the "powerline" solid angle
 	-- powerline symbols: https://github.com/ryanoasis/powerline-extra-symbols
 	local SYMBOL = utf8.char(0xe0ba)
@@ -61,6 +116,15 @@ wezterm.on("update-right-status", function(window, pane)
 	local color_scheme = window:effective_config().resolved_palette
 	local bg = color_scheme.background
 	local fg = color_scheme.foreground
+
+	-- prefer the branch; fall back to the cwd basename only when not in a repo
+	local text
+	if branch ~= "" then
+		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
+	else
+		text = " " .. FOLDER_GLYPH .. " " .. pane_dir(pane) .. " "
+	end
+
 	window:set_right_status(wezterm.format({
 		-- arrow
 		{ Background = { Color = "none" } },
@@ -69,7 +133,7 @@ wezterm.on("update-right-status", function(window, pane)
 		-- text
 		{ Background = { Color = bg } },
 		{ Foreground = { Color = fg } },
-		{ Text = " " .. dir .. " " },
+		{ Text = text },
 	}))
 end)
 
@@ -172,6 +236,11 @@ end)
 
 wezterm.on("augment-command-palette", function(_, _)
 	return {
+		{
+			brief = "Show current path + branch",
+			icon = "md_folder_information",
+			action = wezterm.action_callback(show_path_info),
+		},
 		{
 			brief = "Theme: " .. fav_theme.dark,
 			icon = "md_weather_night",
