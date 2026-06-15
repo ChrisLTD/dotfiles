@@ -96,10 +96,10 @@ Two output modes. Unless the user has already indicated a preference (e.g. they 
 
 **Markdown:** write the document to `.scratch/pr-<number>-narrative.md` (or `.scratch/<branch>-narrative.md` when there's no PR number) at the repo root, creating `.scratch/` if needed, and tell the user where it is. For small changesets (roughly under 150 changed lines), it's fine to also render it directly in the conversation.
 
-**HTML reader:** when the user asks for HTML, a slideshow, a side-by-side view, or something to "flip through", produce `.scratch/narrative.json` and render it with the bundled script:
+**HTML reader:** when the user asks for HTML, a slideshow, a side-by-side view, or something to "flip through", produce `.scratch/pr-<number>-narrative.json` (or `.scratch/<branch>-narrative.json` when there's no PR number) and render it with the bundled script. Name the JSON to match its HTML output so different PRs don't clobber each other's intermediate:
 
 ```bash
-node <skill-path>/scripts/render_html.ts .scratch/narrative.json -o .scratch/pr-<number>-narrative.html
+node <skill-path>/scripts/render_html.ts .scratch/pr-<number>-narrative.json -o .scratch/pr-<number>-narrative.html
 ```
 
 Requires Node ≥ 22.18 (native type-stripping); on older Node, use `npx tsx` instead of `node`. Syntax highlighting loads highlight.js from cdnjs in the browser — no local install needed; without network access the code renders plain.
