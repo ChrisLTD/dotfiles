@@ -13,6 +13,7 @@ local is_mac = wezterm.target_triple:find("darwin") ~= nil
 -- glyphs: powerline branch + nerdfont folder
 local BRANCH_GLYPH = utf8.char(0xe0a0)
 local FOLDER_GLYPH = wezterm.nerdfonts.md_folder
+local SCHEME_GLYPH = wezterm.nerdfonts.md_palette
 
 -- basename of the pane's cwd ("" if unavailable or not a local path)
 local function pane_dir(pane)
@@ -84,16 +85,19 @@ local function flash(window, text)
 	end)
 end
 
--- flash the cwd basename + branch on demand
-local function show_path_info(window, pane)
-	local branch = pane_branch(pane)
+-- flash the cwd basename, branch, and active color scheme on demand. The scheme
+-- is read from the resolved config so it reflects a random roll, not just a
+-- manual override.
+local function show_status_info(window, pane)
 	local dir = pane_dir(pane)
-	local lpad = "     " -- 5 chars on the left
+	local branch = pane_branch(pane)
+	local scheme = window:effective_config().color_scheme or "default"
+	local parts = { FOLDER_GLYPH .. " " .. dir }
 	if branch ~= "" then
-		flash(window, lpad .. FOLDER_GLYPH .. " " .. dir .. "   " .. BRANCH_GLYPH .. " " .. branch)
-	else
-		flash(window, lpad .. FOLDER_GLYPH .. " " .. dir)
+		table.insert(parts, BRANCH_GLYPH .. " " .. branch)
 	end
+	table.insert(parts, SCHEME_GLYPH .. " " .. scheme)
+	flash(window, "     " .. table.concat(parts, "   ") .. "  ")
 end
 
 -- step forward/back through the active scheme list; assigned below the lists.
@@ -128,10 +132,10 @@ config.keys = {
 	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
 	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
 	{
-		-- flash the cwd + branch in the left status (right status shows only the branch)
+		-- flash cwd + branch + active scheme in the left status
 		key = "i",
 		mods = "CMD|SHIFT",
-		action = wezterm.action_callback(show_path_info),
+		action = wezterm.action_callback(show_status_info),
 	},
 	-- step forward/back through the active color scheme list (CMD+SHIFT+< / >).
 	-- both glyph forms are bound since wezterm may report the key as the shifted
@@ -294,7 +298,7 @@ cycle_scheme = function(window, delta)
 	end
 	local scheme = schemes[(idx - 1 + delta) % #schemes + 1]
 	window:set_config_overrides({ color_scheme = scheme })
-	flash(window, "     " .. scheme .. "  ")
+	flash(window, "     " .. SCHEME_GLYPH .. " " .. scheme .. "  ")
 end
 
 wezterm.on("window-config-reloaded", function(window, _)
@@ -316,9 +320,9 @@ end)
 wezterm.on("augment-command-palette", function(_, _)
 	return {
 		{
-			brief = "Show current path + branch",
+			brief = "Show path, branch, and scheme",
 			icon = "md_folder_information",
-			action = wezterm.action_callback(show_path_info),
+			action = wezterm.action_callback(show_status_info),
 		},
 		{
 			brief = "Scheme: next",
