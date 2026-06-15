@@ -29,9 +29,10 @@ end
 -- panes; for remote/SSH panes cwd.file_path is not a local path.
 --
 -- Result is cached per pane to keep git off the per-second status hot path:
--- re-run only when the cwd changes or after BRANCH_TTL ticks (~5s, since
--- update-right-status fires ~1/sec). A branch switch in place can therefore
--- take up to BRANCH_TTL ticks to show.
+-- re-run only when the cwd changes or BRANCH_TTL seconds have elapsed (wall
+-- clock, so it's independent of how often the status redraws or the flash is
+-- pressed). A branch switch in place can therefore take up to BRANCH_TTL
+-- seconds to show.
 local BRANCH_TTL = 5
 local branch_cache = {}
 
@@ -42,9 +43,9 @@ local function pane_branch(pane)
 	end
 	local path = cwd.file_path
 	local id = pane:pane_id()
+	local now = os.time()
 	local cached = branch_cache[id]
-	if cached and cached.path == path and cached.ticks < BRANCH_TTL then
-		cached.ticks = cached.ticks + 1
+	if cached and cached.path == path and now < cached.expires_at then
 		return cached.branch
 	end
 
@@ -57,7 +58,7 @@ local function pane_branch(pane)
 		branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
 		branch = branch:sub(1, 25)
 	end
-	branch_cache[id] = { path = path, branch = branch, ticks = 0 }
+	branch_cache[id] = { path = path, branch = branch, expires_at = now + BRANCH_TTL }
 	return branch
 end
 
