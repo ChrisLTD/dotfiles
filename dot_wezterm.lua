@@ -14,20 +14,21 @@ local is_mac = wezterm.target_triple:find("darwin") ~= nil
 local BRANCH_GLYPH = utf8.char(0xe0a0)
 local FOLDER_GLYPH = wezterm.nerdfonts.md_folder
 
--- basename of the pane's cwd ("" if unavailable)
+-- basename of the pane's cwd ("" if unavailable or not a local path)
 local function pane_dir(pane)
 	local cwd = pane:get_current_working_dir()
-	if not cwd then
+	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
 		return ""
 	end
 	return cwd.file_path:match("([^/]+)/?$") or ""
 end
 
 -- git branch for the pane's cwd ("" outside a repo), with the same prefix
--- stripping as the nvim statusline, truncated to 25 chars
+-- stripping as the nvim statusline, truncated to 25 chars. Only runs for local
+-- panes; for remote/SSH panes cwd.file_path is not a local path.
 local function pane_branch(pane)
 	local cwd = pane:get_current_working_dir()
-	if not cwd then
+	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
 		return ""
 	end
 	local ok, stdout = wezterm.run_child_process({
@@ -43,6 +44,8 @@ end
 
 -- flash branch + cwd basename in the left status. Drawn in-window rather than
 -- via toast_notification, which depends on macOS notification permissions.
+-- Per-window generation token so a later flash isn't cleared by an earlier timer.
+local flash_gen = {}
 local function show_path_info(window, pane)
 	local branch = pane_branch(pane)
 	local dir = pane_dir(pane)
@@ -58,9 +61,14 @@ local function show_path_info(window, pane)
 		{ Attribute = { Intensity = "Bold" } },
 		{ Text = text },
 	}))
-	-- clear it again after a few seconds
+	-- clear it again after a few seconds, unless a newer flash superseded this one
+	local id = window:window_id()
+	flash_gen[id] = (flash_gen[id] or 0) + 1
+	local gen = flash_gen[id]
 	wezterm.time.call_after(5, function()
-		window:set_left_status("")
+		if flash_gen[id] == gen then
+			window:set_left_status("")
+		end
 	end)
 end
 
