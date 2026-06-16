@@ -3,6 +3,14 @@ export EDITOR="nvim"
 export VISUAL="nvim"
 alias vim=nvim
 
+# Command history
+HISTFILE=~/.zsh_history
+HISTSIZE=10000
+SAVEHIST=10000
+setopt HIST_IGNORE_ALL_DUPS   # drop older duplicates, keep history unique
+setopt HIST_IGNORE_SPACE      # don't record commands prefixed with a space
+setopt SHARE_HISTORY          # share history live across running shells
+
 # Initialize zsh's completion system
 autoload -Uz compinit && compinit
 
