@@ -114,6 +114,8 @@ The script's header comment documents the full JSON schema. The essentials: top-
 
 Do not hand-write the HTML; the renderer exists so output is deterministic and consistent across runs. All line-number rules from Step 4 apply identically to the JSON.
 
+To publish the generated HTML to GitHub Pages, use the `/publish-narrative` skill.
+
 ## Calibration
 
 - A 2-file typo fix does not need five chapters. Scale the apparatus to the changeset; for trivial PRs, one paragraph plus references is the right output.
