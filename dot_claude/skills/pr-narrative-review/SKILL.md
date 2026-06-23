@@ -96,10 +96,10 @@ Default to HTML. Only use markdown if the user explicitly asks for it (e.g. "mar
 
 **Markdown:** write the document to `.scratch/pr-<number>-narrative.md` (or `.scratch/<branch>-narrative.md` when there's no PR number) at the repo root, creating `.scratch/` if needed, and tell the user where it is. For small changesets (roughly under 150 changed lines), it's fine to also render it directly in the conversation.
 
-**HTML reader:** produce `.scratch/narrative.json` and render it with the bundled script:
+**HTML reader:** produce `.scratch/pr-<number>-narrative.json` (or `.scratch/<branch>-narrative.json` when there's no PR number) and render it with the bundled script:
 
 ```bash
-node <skill-path>/scripts/render_html.ts .scratch/narrative.json -o .scratch/pr-<number>-narrative.html
+node <skill-path>/scripts/render_html.ts .scratch/pr-<number>-narrative.json -o .scratch/pr-<number>-narrative.html
 ```
 
 After rendering, open the file automatically:
