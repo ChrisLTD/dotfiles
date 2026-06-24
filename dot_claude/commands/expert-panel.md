@@ -13,7 +13,8 @@ Run a two-round review of the current changes as a panel of expert reviewers, ea
    - **Performance / efficiency** — hot paths, N+1s, needless allocation or IO.
    - **Maintainability / API design** — naming, cohesion, public surface, future-proofing, simplification.
    - **Testing / coverage** — missing cases, brittle assertions, untested branches.
-   - **Domain-specific** — add a lens the diff demands (concurrency, data migration, accessibility, shell/templating safety, etc.) and drop ones that don't apply.
+   - **UI/UX** — visual hierarchy, interaction patterns, affordances, error states, empty states, loading states, accessibility (ARIA, focus, contrast), responsiveness. Apply when the diff touches UI components, templates, styles, or user-facing copy.
+   - **Domain-specific** — add a lens the diff demands (concurrency, data migration, shell/templating safety, etc.) and drop ones that don't apply.
 
    Name the panel you chose and say in one line why each lens earned a seat.
 3. Spawn one Claude sub-agent per lens, **in parallel** (one message, multiple Agent tool calls, `general-purpose` type). Give every expert the same scope and this charge:
