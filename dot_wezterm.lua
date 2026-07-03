@@ -17,38 +17,36 @@ local BRANCH_GLYPH = utf8.char(0xe0a0)
 local FOLDER_GLYPH = wezterm.nerdfonts.md_folder
 local SCHEME_GLYPH = wezterm.nerdfonts.md_palette
 
--- basename of the pane's cwd ("" if unavailable or not a local path)
-local function pane_dir(pane)
+-- local filesystem path of the pane's cwd (nil if unavailable or not a local
+-- path, e.g. for remote/SSH panes)
+local function pane_cwd_path(pane)
 	local cwd = pane:get_current_working_dir()
 	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
-		return ""
+		return nil
 	end
-	-- basename, or "/" when at the filesystem root
-	return cwd.file_path:match("([^/]+)/?$") or "/"
+	return cwd.file_path
 end
 
--- git branch for the pane's cwd ("" outside a repo), with the same prefix
--- stripping as the nvim statusline, truncated to 25 chars. Only runs for local
--- panes; for remote/SSH panes cwd.file_path is not a local path.
+-- basename, or "/" when at the filesystem root
+local function dir_basename(path)
+	return path:match("([^/]+)/?$") or "/"
+end
+
+-- git branch for a local cwd path ("" outside a repo), with the same prefix
+-- stripping as the nvim statusline, truncated to 25 chars.
 --
--- Result is cached per pane to keep git off the per-second status hot path:
--- re-run only when the cwd changes or BRANCH_TTL seconds have elapsed (wall
--- clock, so it's independent of how often the status redraws or the flash is
--- pressed). A branch switch in place can therefore take up to BRANCH_TTL
--- seconds to show.
+-- Result is cached per path to keep git off the per-second status hot path
+-- (and so panes sharing a cwd share one git run): re-run only when BRANCH_TTL
+-- seconds have elapsed (wall clock, so it's independent of how often the
+-- status redraws or the flash is pressed). A branch switch in place can
+-- therefore take up to BRANCH_TTL seconds to show.
 local BRANCH_TTL = 5
 local branch_cache = {}
 
-local function pane_branch(pane)
-	local cwd = pane:get_current_working_dir()
-	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
-		return ""
-	end
-	local path = cwd.file_path
-	local id = pane:pane_id()
+local function branch_for(path)
 	local now = os.time()
-	local cached = branch_cache[id]
-	if cached and cached.path == path and now < cached.expires_at then
+	local cached = branch_cache[path]
+	if cached and now < cached.expires_at then
 		return cached.branch
 	end
 
@@ -61,7 +59,7 @@ local function pane_branch(pane)
 		branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
 		branch = branch:sub(1, 25)
 	end
-	branch_cache[id] = { path = path, branch = branch, expires_at = now + BRANCH_TTL }
+	branch_cache[path] = { branch = branch, expires_at = now + BRANCH_TTL }
 	return branch
 end
 
@@ -187,8 +185,9 @@ wezterm.on("update-right-status", function(window, pane)
 	-- repo; cwd mode always shows the cwd basename; both mode always shows cwd +
 	-- branch (with the branch truncated harder to keep it short)
 	local mode = right_status_mode[window:window_id()] or "branch"
-	local dir = pane_dir(pane)
-	local branch = mode ~= "cwd" and pane_branch(pane) or ""
+	local path = pane_cwd_path(pane)
+	local dir = path and dir_basename(path) or ""
+	local branch = (path and mode ~= "cwd") and branch_for(path) or ""
 
 	-- on main/master the branch name says nothing about which repo/worktree this
 	-- is, so show cwd + branch like "both" mode
