@@ -53,12 +53,10 @@ chezmoi update                 # pull latest from git and apply
 | `~/.wezterm.lua` | WezTerm config |
 | `~/.config/yazi/yazi.toml` | Yazi file manager config |
 | `~/.config/nvim/` | Neovim — cloned from [ChrisLTD/nvim](https://github.com/ChrisLTD/nvim) via external |
-| `~/.claude/settings.json` | Claude Code settings |
 | `~/.claude/agents/` | Claude Code custom agents |
 | `~/.claude/commands/` | Claude Code slash commands |
 | `~/.claude-business/agents/` | Symlink → `~/.claude/agents/` |
 | `~/.claude-business/commands/` | Symlink → `~/.claude/commands/` |
-| `~/.claude-business/settings.json` | Claude Code settings for the business profile |
 | `~/.Brewfile` | Homebrew bundle — formulas and casks for macOS |
 
 ## Package installation
