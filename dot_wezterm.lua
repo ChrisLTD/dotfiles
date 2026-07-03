@@ -56,8 +56,16 @@ local function branch_for(path)
 	})
 	if ok then
 		branch = stdout:gsub("%s+$", "")
-		branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
-		branch = branch:sub(1, 25)
+		if branch == "HEAD" then
+			-- detached HEAD: the literal "HEAD" says nothing, show the short hash
+			local ok_sha, sha = wezterm.run_child_process({
+				"git", "-C", path, "rev-parse", "--short", "HEAD",
+			})
+			branch = ok_sha and sha:gsub("%s+$", "") or ""
+		else
+			branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
+			branch = branch:sub(1, 25)
+		end
 	end
 	branch_cache[path] = { branch = branch, expires_at = now + BRANCH_TTL }
 	return branch
