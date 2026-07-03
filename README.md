@@ -50,7 +50,7 @@ chezmoi update                 # pull latest from git and apply
 | `~/.gitconfig` | Git config — email is templated per machine |
 | `~/.config/git/ignore` | Global gitignore |
 | `~/.tmux.conf` | Tmux config |
-| `~/.wezterm.lua` | WezTerm config |
+| `~/.config/wezterm/` | WezTerm config — `wezterm.lua` entry point plus modules (keys, status, themes, flash, palette, platform) |
 | `~/.config/yazi/yazi.toml` | Yazi file manager config |
 | `~/.config/nvim/` | Neovim — cloned from [ChrisLTD/nvim](https://github.com/ChrisLTD/nvim) via external |
 | `~/.claude/settings.json` | Claude Code settings |

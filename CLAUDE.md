@@ -10,6 +10,7 @@ This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both do
 | `dot_zprofile.tmpl` | `~/.zprofile` | gcloud SDK path (templated) |
 | `dot_gitconfig.tmpl` | `~/.gitconfig` | Git config (email templated) |
 | `dot_tmux.conf` | `~/.tmux.conf` | Tmux config |
+| `dot_config/wezterm/` | `~/.config/wezterm/` | WezTerm config — `wezterm.lua` entry point plus modules (keys, status, themes, flash, palette, platform). `.chezmoiremove` deletes the previously deployed `~/.wezterm.lua` |
 | `dot_config/yazi/` | `~/.config/yazi/` | Yazi file manager config |
 | `dot_gitignore` | `~/.gitignore` | Global gitignore (wired via `core.excludesfile` in `dot_gitconfig.tmpl`) |
 | `dot_claude/` | `~/.claude/` | Claude Code settings, agents, commands |
