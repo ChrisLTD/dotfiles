@@ -85,6 +85,8 @@ local function flash(window, text)
 	local gen = flash_gen[id]
 	wezterm.time.call_after(5, function()
 		if flash_gen[id] == gen then
+			-- no newer flash superseded this one, so the entry can go too
+			flash_gen[id] = nil
 			-- window may have been closed before the timer fires
 			pcall(function()
 				window:set_left_status("")
@@ -125,6 +127,34 @@ end
 local function toggle_right_status(window, _)
 	local id = window:window_id()
 	right_status_mode[id] = next_right_status(right_status_mode[id])
+end
+
+-- evict stale cache entries so long-running sessions don't accumulate state
+-- for closed panes/windows: expired branch results and right-status modes for
+-- windows that no longer exist. Throttled to once per SWEEP_INTERVAL; called
+-- from the status hot path, which is why it stays cheap.
+local SWEEP_INTERVAL = 60
+local next_sweep = 0
+local function sweep_caches()
+	local now = os.time()
+	if now < next_sweep then
+		return
+	end
+	next_sweep = now + SWEEP_INTERVAL
+	for path, entry in pairs(branch_cache) do
+		if now >= entry.expires_at then
+			branch_cache[path] = nil
+		end
+	end
+	local live = {}
+	for _, w in ipairs(wezterm.gui.gui_windows()) do
+		live[w:window_id()] = true
+	end
+	for id in pairs(right_status_mode) do
+		if not live[id] then
+			right_status_mode[id] = nil
+		end
+	end
 end
 
 config.font_size = 14
@@ -180,6 +210,8 @@ config.keys = {
 -- show git branch (preferred) or cwd in right part of top bar; mod+SHIFT+I
 -- toggles between the two per window
 wezterm.on("update-right-status", function(window, pane)
+	sweep_caches()
+
 	-- Grab the utf8 character for the "powerline" solid angle
 	-- powerline symbols: https://github.com/ryanoasis/powerline-extra-symbols
 	local SYMBOL = utf8.char(0xe0ba)
