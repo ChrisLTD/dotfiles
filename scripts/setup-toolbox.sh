@@ -77,5 +77,5 @@ fi
 
 # git-spice — stacked PR manager (https://github.com/abhinav/git-spice)
 if ! command -v gs >/dev/null; then
-  go install go.abhg.dev/gs/cmd/gs@latest
+  go install go.abhg.dev/gs@latest
 fi
