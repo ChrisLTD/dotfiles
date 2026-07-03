@@ -26,13 +26,14 @@ This downloads chezmoi to `~/.local/bin/chezmoi` (which is on PATH on Fedora by 
 
 ### 3. (Optional) SSH key for pushing changes back
 
-The repo is public, so HTTPS clone works without auth. If you plan to commit and push edits from this machine, add an SSH key to GitHub and switch the chezmoi source remote to SSH:
+The repo is public, so HTTPS clone works without auth — fetches and `chezmoi update` never need a key. If you plan to commit and push edits from this machine, add an SSH key to GitHub:
 
 ```sh
 ssh-keygen -t ed25519 -C "your_email@example.com"
 # Add ~/.ssh/id_ed25519.pub at https://github.com/settings/keys
-git -C "$(chezmoi source-path)" remote set-url origin git@github.com:ChrisLTD/dotfiles.git
 ```
+
+No remote changes needed: the deployed `~/.gitconfig` rewrites pushes to `github.com` from HTTPS to SSH (`pushInsteadOf`), so pushing works as soon as the key is registered.
 
 ### Subsequent runs
 
