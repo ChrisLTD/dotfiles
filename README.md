@@ -49,13 +49,15 @@ chezmoi update                 # pull latest from git and apply
 | `~/.zshrc` | Shell config |
 | `~/.zprofile` | gcloud SDK path (skipped silently if SDK not installed) |
 | `~/.gitconfig` | Git config — email is templated per machine |
-| `~/.config/git/ignore` | Global gitignore |
+| `~/.gitignore` | Global gitignore — wired via `core.excludesfile` in `~/.gitconfig` |
 | `~/.tmux.conf` | Tmux config |
 | `~/.wezterm.lua` | WezTerm config |
 | `~/.config/yazi/yazi.toml` | Yazi file manager config |
 | `~/.config/nvim/` | Neovim — cloned from [ChrisLTD/nvim](https://github.com/ChrisLTD/nvim) via external |
+| `~/.claude/CLAUDE.md` | Claude Code global instructions |
 | `~/.claude/agents/` | Claude Code custom agents |
 | `~/.claude/commands/` | Claude Code slash commands |
+| `~/.claude/skills/` | Claude Code skills |
 | `~/.claude-business/agents/` | Symlink → `~/.claude/agents/` |
 | `~/.claude-business/commands/` | Symlink → `~/.claude/commands/` |
 | `~/.Brewfile` | Homebrew bundle — formulas and casks for macOS |
@@ -64,7 +66,7 @@ chezmoi update                 # pull latest from git and apply
 
 `chezmoi apply` automatically runs platform-specific install scripts:
 
-- **Mac** (`run_onchange_install-mac-packages.sh.tmpl`): installs Homebrew if missing, then runs `brew bundle --global` using `~/.Brewfile`. Re-runs automatically whenever `~/.Brewfile` changes.
+- **Mac** (`run_onchange_install-mac-packages.sh.tmpl`): installs Homebrew if missing, then runs `brew bundle --global --no-upgrade` using `~/.Brewfile`. Re-runs automatically whenever `~/.Brewfile` changes.
 - **Fedora Silverblue** (`run_onchange_install-fedora-packages.sh.tmpl`): adds Flathub remote, installs Flatpak apps, and applies GNOME settings via `gsettings`.
 
 Each script guards itself with an OS check and exits immediately on the wrong platform.
