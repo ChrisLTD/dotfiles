@@ -190,7 +190,7 @@ config.keys = {
 	{
 		key = "P",
 		mods = is_mac and "CMD|SHIFT" or "CTRL|SHIFT",
-		action = wezterm.action.ActivateCommandPalette,
+		action = act.ActivateCommandPalette,
 	},
 	{ key = "[", mods = "CTRL|SHIFT", action = act.MoveTabRelative(-1) },
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
@@ -431,7 +431,7 @@ wezterm.on("augment-command-palette", function(window, _)
 			end),
 		},
 		{
-			brief = "Theme: Catppuccin Light",
+			brief = "Theme: " .. fav_theme.light,
 			icon = "md_weather_sunny",
 			action = wezterm.action_callback(function(window, _)
 				set_scheme_override(window, fav_theme.light)
