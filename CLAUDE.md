@@ -10,9 +10,11 @@ This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both do
 | `dot_zprofile.tmpl` | `~/.zprofile` | gcloud SDK path (templated) |
 | `dot_gitconfig.tmpl` | `~/.gitconfig` | Git config (email templated) |
 | `dot_tmux.conf` | `~/.tmux.conf` | Tmux config |
+| `dot_wezterm.lua` | `~/.wezterm.lua` | WezTerm config |
 | `dot_config/yazi/` | `~/.config/yazi/` | Yazi file manager config |
 | `dot_gitignore` | `~/.gitignore` | Global gitignore (wired via `core.excludesfile` in `dot_gitconfig.tmpl`) |
-| `dot_claude/` | `~/.claude/` | Claude Code settings, agents, commands |
+| `dot_claude/` | `~/.claude/` | Claude Code global CLAUDE.md, agents, commands, skills (`settings.json` is app-managed and ignored via `.chezmoiignore`) |
+| `dot_claude-business/` | `~/.claude-business/` | Business Claude Code profile — `agents` and `commands` are symlinks into `~/.claude/` |
 | `dot_Brewfile.tmpl` | `~/.Brewfile` | Homebrew bundle (Mac only). Templated — shared CLIs are rendered from `.chezmoidata/cli_packages.yaml` |
 | `.chezmoidata/cli_packages.yaml` | — | Source of truth for CLIs installed on both Mac (brew) and Fedora toolbox (dnf). Each entry has `brew:` and `dnf:` names |
 | `run_onchange_install-mac-packages.sh.tmpl` | — | Mac: installs Homebrew + brew bundle. Hash includes `cli_packages` JSON, so editing the shared list re-triggers `brew bundle` |
@@ -44,6 +46,7 @@ chezmoi update                 # pull latest from git and apply
 - Adds Flathub remote
 - Installs these Flatpak apps:
   - `com.google.Chrome`
+  - `com.usebruno.Bruno`
   - `com.mattjakeman.ExtensionManager`
   - `com.onepassword.OnePassword`
   - `app.drey.Gradia`
@@ -51,7 +54,7 @@ chezmoi update                 # pull latest from git and apply
   - `io.github.focustimerhq.FocusTimer`
   - `md.obsidian.Obsidian`
   - `org.gnome.Epiphany`
-  - `org.gnome.Solanum`
+  - `io.github.wartybix.Constrict`
   - `org.localsend.localsend_app`
   - `org.mozilla.firefox`
 - Sets Caps Lock → Escape via gsettings
@@ -61,7 +64,7 @@ chezmoi update                 # pull latest from git and apply
 - [ ] Confirm all Flatpak IDs above are correct (some may differ on Flathub)
 - [x] Constrict — `io.github.wartybix.Constrict` (added to script)
 - [ ] Decide whether to add any "maybe" apps (commented out in script):
-  - `app.drey.Keypunch`, `com.github.dynobo.normcap`, `com.github.tchx84.Flatseal`, `org.gnome.World.PikaBackup`, `org.gnome.DejaDup`
+  - `app.drey.Keypunch`, `com.github.dynobo.normcap`, `com.github.tchx84.Flatseal`, `org.gnome.Solanum`, `org.gnome.World.PikaBackup`, `org.gnome.DejaDup`
 - [ ] Install GNOME extensions manually via Extension Manager:
   - **Clipboard Indicator** — after installing: exclude `com.onepassword.OnePassword`, set toggle shortcut to `shift-super-v`
   - **PaperWM**
