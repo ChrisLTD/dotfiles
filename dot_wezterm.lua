@@ -103,6 +103,15 @@ local function flash_scheme(window, scheme)
 	flash(window, LEFT_PAD .. SCHEME_GLYPH .. " " .. scheme .. "  ")
 end
 
+-- set (or clear, with nil) only the color_scheme override so unrelated
+-- overrides survive. Clearing triggers window-config-reloaded, which rolls a
+-- fresh random scheme.
+local function set_scheme_override(window, scheme)
+	local overrides = window:get_config_overrides() or {}
+	overrides.color_scheme = scheme
+	window:set_config_overrides(overrides)
+end
+
 -- step forward/back through the active scheme list; assigned below the lists.
 local cycle_scheme
 local scheme_next = wezterm.action_callback(function(window, _)
@@ -362,7 +371,7 @@ cycle_scheme = function(window, delta)
 		end
 	end
 	local scheme = schemes[(idx - 1 + delta) % #schemes + 1]
-	window:set_config_overrides({ color_scheme = scheme })
+	set_scheme_override(window, scheme)
 	flash_scheme(window, scheme)
 end
 
@@ -379,7 +388,7 @@ wezterm.on("window-config-reloaded", function(window, _)
 		end
 	end
 	local scheme = schemes[math.random(#schemes)]
-	window:set_config_overrides({ color_scheme = scheme })
+	set_scheme_override(window, scheme)
 	flash_scheme(window, scheme)
 end)
 
@@ -411,21 +420,21 @@ wezterm.on("augment-command-palette", function(window, _)
 			brief = "Theme: " .. fav_theme.dark,
 			icon = "md_weather_night",
 			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({ color_scheme = fav_theme.dark })
+				set_scheme_override(window, fav_theme.dark)
 			end),
 		},
 		{
 			brief = "Theme: Catppuccin Light",
 			icon = "md_weather_sunny",
 			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({ color_scheme = fav_theme.light })
+				set_scheme_override(window, fav_theme.light)
 			end),
 		},
 		{
 			brief = "Theme: Random",
 			icon = "md_shuffle",
 			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({})
+				set_scheme_override(window, nil)
 			end),
 		},
 		{
@@ -435,7 +444,7 @@ wezterm.on("augment-command-palette", function(window, _)
 			icon = "md_theme_light_dark",
 			action = wezterm.action_callback(function(window, _)
 				wezterm.GLOBAL.follow_os_appearance = not wezterm.GLOBAL.follow_os_appearance
-				window:set_config_overrides({})
+				set_scheme_override(window, nil)
 			end),
 		},
 	}
