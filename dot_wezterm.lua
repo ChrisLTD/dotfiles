@@ -9,6 +9,8 @@ if wezterm.GLOBAL.follow_os_appearance == nil then
 	wezterm.GLOBAL.follow_os_appearance = true
 end
 local is_mac = wezterm.target_triple:find("darwin") ~= nil
+-- primary modifier for custom bindings: CMD on macOS, SUPER (the logo key) on Linux
+local mod = is_mac and "CMD" or "SUPER"
 
 -- glyphs: powerline branch + nerdfont folder
 local BRANCH_GLYPH = utf8.char(0xe0a0)
@@ -85,9 +87,12 @@ local function flash(window, text)
 	end)
 end
 
--- flash a scheme name in the left status, prefixed with the palette glyph
+-- flash a scheme name in the left status, prefixed with the palette glyph.
+-- The extra left padding on macOS clears the traffic-light buttons that are
+-- integrated into the tab bar.
+local LEFT_PAD = is_mac and "     " or " "
 local function flash_scheme(window, scheme)
-	flash(window, "     " .. SCHEME_GLYPH .. " " .. scheme .. "  ")
+	flash(window, LEFT_PAD .. SCHEME_GLYPH .. " " .. scheme .. "  ")
 end
 
 -- step forward/back through the active scheme list; assigned below the lists.
@@ -99,7 +104,7 @@ local scheme_prev = wezterm.action_callback(function(window, _)
 	cycle_scheme(window, -1)
 end)
 
--- per-window right-status mode, cycled by CMD+SHIFT+I:
+-- per-window right-status mode, cycled by mod+SHIFT+I:
 --   "branch" (default, cwd fallback) -> "cwd" -> "both" (cwd + branch)
 local right_status_modes = { "branch", "cwd", "both" }
 local right_status_mode = {}
@@ -121,8 +126,9 @@ config.inactive_pane_hsb = { saturation = 0.9, brightness = 0.9 }
 -- calt=contextual alternates, clig=contextual ligatures, liga=standard ligatures
 config.harfbuzz_features = { "calt=0", "clig=0", "liga=0" }
 
--- On macOS, 'RESIZE|INTEGRATED_BUTTONS' moves window controls into the tab bar
-config.window_decorations = "RESIZE|INTEGRATED_BUTTONS"
+-- On macOS, 'RESIZE|INTEGRATED_BUTTONS' moves window controls into the tab bar;
+-- elsewhere keep the normal title bar
+config.window_decorations = is_mac and "RESIZE|INTEGRATED_BUTTONS" or "TITLE|RESIZE"
 config.window_frame = {
 	font = wezterm.font({ family = "JetBrains Mono", weight = "Bold" }),
 	font_size = 13,
@@ -136,24 +142,24 @@ config.keys = {
 	},
 	{ key = "[", mods = "CTRL|SHIFT", action = act.MoveTabRelative(-1) },
 	{ key = "]", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) },
-	{ key = "d", mods = "CMD", action = act.SplitPane({ direction = "Right" }) },
-	{ key = "d", mods = "CMD|SHIFT", action = act.SplitPane({ direction = "Down" }) },
-	-- step forward/back through the active color scheme list (CMD+SHIFT+< / >).
+	{ key = "d", mods = mod, action = act.SplitPane({ direction = "Right" }) },
+	{ key = "d", mods = mod .. "|SHIFT", action = act.SplitPane({ direction = "Down" }) },
+	-- step forward/back through the active color scheme list (mod+SHIFT+< / >).
 	-- both glyph forms are bound since wezterm may report the key as the shifted
 	-- glyph (< >) or the base key (, .) depending on the setup.
-	{ key = ">", mods = "CMD|SHIFT", action = scheme_next },
-	{ key = ".", mods = "CMD|SHIFT", action = scheme_next },
-	{ key = "<", mods = "CMD|SHIFT", action = scheme_prev },
-	{ key = ",", mods = "CMD|SHIFT", action = scheme_prev },
+	{ key = ">", mods = mod .. "|SHIFT", action = scheme_next },
+	{ key = ".", mods = mod .. "|SHIFT", action = scheme_next },
+	{ key = "<", mods = mod .. "|SHIFT", action = scheme_prev },
+	{ key = ",", mods = mod .. "|SHIFT", action = scheme_prev },
 	{
 		-- toggle the right status between branch and cwd (per window)
 		key = "i",
-		mods = "CMD|SHIFT",
+		mods = mod .. "|SHIFT",
 		action = wezterm.action_callback(toggle_right_status),
 	},
 	{
 		key = "w",
-		mods = "CMD",
+		mods = mod,
 		action = wezterm.action_callback(function(window, pane)
 			local tab = window:active_tab()
 			if #tab:panes() > 1 then
@@ -165,7 +171,7 @@ config.keys = {
 	},
 }
 
--- show git branch (preferred) or cwd in right part of top bar; CMD+SHIFT+I
+-- show git branch (preferred) or cwd in right part of top bar; mod+SHIFT+I
 -- toggles between the two per window
 wezterm.on("update-right-status", function(window, pane)
 	-- Grab the utf8 character for the "powerline" solid angle
