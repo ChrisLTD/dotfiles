@@ -32,6 +32,13 @@ local function dir_basename(path)
 	return path:match("([^/]+)/?$") or "/"
 end
 
+-- truncate to at most n characters without splitting a UTF-8 sequence
+-- (string.sub counts bytes and can cut a multi-byte character in half)
+local function utf8_truncate(s, n)
+	local byte_after = utf8.offset(s, n + 1)
+	return byte_after and s:sub(1, byte_after - 1) or s
+end
+
 -- git branch for a local cwd path ("" outside a repo), with the same prefix
 -- stripping as the nvim statusline, truncated to 25 chars.
 --
@@ -64,7 +71,7 @@ local function branch_for(path)
 			branch = ok_sha and sha:gsub("%s+$", "") or ""
 		else
 			branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
-			branch = branch:sub(1, 25)
+			branch = utf8_truncate(branch, 25)
 		end
 	end
 	branch_cache[path] = { branch = branch, expires_at = now + BRANCH_TTL }
@@ -248,7 +255,7 @@ wezterm.on("update-right-status", function(window, pane)
 	if mode == "cwd" or branch == "" then
 		text = " " .. FOLDER_GLYPH .. " " .. dir .. " "
 	elseif mode == "both" then
-		text = " " .. FOLDER_GLYPH .. " " .. dir .. " " .. BRANCH_GLYPH .. " " .. branch:sub(1, 13) .. " "
+		text = " " .. FOLDER_GLYPH .. " " .. dir .. " " .. BRANCH_GLYPH .. " " .. utf8_truncate(branch, 13) .. " "
 	else
 		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
 	end
