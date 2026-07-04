@@ -54,11 +54,12 @@ local function branch_for(path)
 	if ok then
 		branch = stdout:gsub("%s+$", "")
 		if branch == "HEAD" then
-			-- detached HEAD: the literal "HEAD" says nothing, show the short hash
+			-- detached HEAD: keep the HEAD marker so the state is obvious, and
+			-- append the short hash so it also says where you are
 			local ok_sha, sha = wezterm.run_child_process({
 				"git", "-C", path, "rev-parse", "--short", "HEAD",
 			})
-			branch = ok_sha and sha:gsub("%s+$", "") or ""
+			branch = ok_sha and "HEAD@" .. sha:gsub("%s+$", "") or "HEAD"
 		else
 			branch = branch:gsub("^chrisltd/", ""):gsub("^feature/eng%-", "")
 			branch = utf8_truncate(branch, 25)
