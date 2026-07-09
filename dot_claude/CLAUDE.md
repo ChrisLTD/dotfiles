@@ -6,6 +6,12 @@
 - No em-dash asides or parenthetical pile-ups
 - Don't restate implementation details the diff already shows
 
+## Branching and PRs
+
+- Use git-spice for branch and stack management (`gs branch create`, `gs stack submit`)
+- Break multi-part work into stacked branches, one reviewable change per branch
+- Open PRs as drafts
+
 ## GitHub issues
 
 - Never reply to GitHub issues on my behalf without asking me first
