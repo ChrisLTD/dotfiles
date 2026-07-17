@@ -8,7 +8,8 @@
 
 ## Branching and PRs
 
-- Use git-spice for branch and stack management (`gs branch create`, `gs stack submit`)
+- Use git-spice for branch and stack management (`gs branch create`, `gs stack submit`), but only when actually building a stack of dependent branches
+- worktrunk (`wt`) is installed for git worktree management
 - Break multi-part work into stacked branches, one reviewable change per branch
 - Open PRs as drafts
 
