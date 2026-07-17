@@ -2,6 +2,8 @@
 
 This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both dotfile deployment and automated package installation on Mac and Fedora Silverblue.
 
+> [worktrunk](https://github.com/max-sixty/worktrunk) (`wt`) is installed for git worktree management.
+
 ## What's here
 
 | Source file | Deploys to | Purpose |
