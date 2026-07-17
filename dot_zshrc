@@ -38,9 +38,9 @@ alias ll='eza -lah --git --group-directories-first'
 # git-spice (brew installs it as git-spice to avoid clashing with ghostscript)
 command -v git-spice >/dev/null && alias gs='git-spice'
 
+# Worktrunk https://github.com/max-sixty/worktrunk
+if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
+
 
 # The next line enables shell command completion for gcloud.
 if [ -f "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc" ]; then . "$HOME/Downloads/google-cloud-sdk/completion.zsh.inc"; fi
-
-# Worktrunk https://github.com/max-sixty/worktrunk
-if command -v wt >/dev/null 2>&1; then eval "$(command wt config shell init zsh)"; fi
