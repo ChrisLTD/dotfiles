@@ -7,7 +7,7 @@ description: >-
   /rc and you want to preview the running app or a screenshot without typing
   URLs. Trigger on "expose the dev server", "get this on my phone", "preview on
   my phone", "tunnel the dev server", "put the app on my phone", or "screenshot
-  to my phone".
+  to my phone". Mac only.
 ---
 
 # expose-dev
@@ -40,8 +40,8 @@ Scripts live in `~/.claude/skills/expose-dev/scripts/`. Invoke them with `bash` 
    Prints the `https://<machine>.<tailnet>.ts.net` URL. This proxies `localhost:<port>` over
    the tailnet, so it works even when the dev server binds only to `127.0.0.1`.
 
-4. **Build the preview page and publish it.** Make sure `qrencode` is present
-   (`command -v qrencode || brew install qrencode`), then:
+4. **Build the preview page and publish it.** `qrencode` is installed via the Brewfile
+   (run `chezmoi apply` if it's missing). Then:
    ```bash
    node ~/.claude/skills/expose-dev/scripts/build-preview.mjs \
      --url "<url from step 3>" --title "<app name>:<port>" \
@@ -83,4 +83,6 @@ someone *not* on your tailnet:
   back to binding the dev server to `0.0.0.0` and using `http://<tailnet-ip>:<port>`
   (`tailscale ip -4`).
 - `serve` is private; `funnel` is public — never funnel silently.
+- One port at a time: `serve` mounts at the node's HTTPS root, so exposing a second port
+  replaces the first. Re-run `expose.sh` to switch back.
 - Your machine must stay awake for the serve + dev server to stay reachable.

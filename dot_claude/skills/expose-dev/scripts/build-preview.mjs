@@ -35,8 +35,12 @@ function qrSvg(text) {
     return execFileSync('qrencode', ['-t', 'SVG', '-m', '2', '-o', '-', text], {
       encoding: 'utf8',
     });
-  } catch {
-    console.error("qrencode not found — install it with: brew install qrencode");
+  } catch (err) {
+    if (err.code === 'ENOENT') {
+      console.error('qrencode not found — install it via the Brewfile (chezmoi apply)');
+    } else {
+      console.error(`qrencode failed: ${err.message}`);
+    }
     process.exit(1);
   }
 }
