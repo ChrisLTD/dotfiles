@@ -2,8 +2,8 @@
 name: expose-dev
 description: >-
   Expose a locally running dev server to your phone or another device over
-  Tailscale, or capture a screenshot, and hand back a tappable link plus a
-  scannable QR as an Artifact. Use when driving a session from your phone via
+  Tailscale, or capture a screenshot, and hand back a tappable, copyable link
+  as an Artifact. Use when driving a session from your phone via
   /rc and you want to preview the running app or a screenshot without typing
   URLs. Trigger on "expose the dev server", "get this on my phone", "preview on
   my phone", "tunnel the dev server", "put the app on my phone", or "screenshot
@@ -15,7 +15,7 @@ description: >-
 Surface a local dev server (or a screenshot) to your phone / another device. Default
 transport is **Tailscale** (private to your tailnet, stable URL, and it proxies to
 `localhost`-only servers). The deliverable is an **Artifact** page with a big tappable link
-and a QR code, so from a phone you tap and from a second screen you scan.
+and a copy button for the URL.
 
 Scripts live in `~/.claude/skills/expose-dev/scripts/`. Invoke them with `bash` / `node`.
 
@@ -40,8 +40,7 @@ Scripts live in `~/.claude/skills/expose-dev/scripts/`. Invoke them with `bash` 
    Prints the `https://<machine>.<tailnet>.ts.net` URL. This proxies `localhost:<port>` over
    the tailnet, so it works even when the dev server binds only to `127.0.0.1`.
 
-4. **Build the preview page and publish it.** `qrencode` is installed via the Brewfile
-   (run `chezmoi apply` if it's missing). Then:
+4. **Build the preview page and publish it.**
    ```bash
    node ~/.claude/skills/expose-dev/scripts/build-preview.mjs \
      --url "<url from step 3>" --title "<app name>:<port>" \
@@ -49,7 +48,7 @@ Scripts live in `~/.claude/skills/expose-dev/scripts/`. Invoke them with `bash` 
    ```
    (`$SCRATCHPAD` = the session scratchpad dir.) Then call the **Artifact** tool on that HTML
    file (favicon `📱`, a short title like "Dev preview"). Give the user the artifact link —
-   they tap it on the phone; a QR is there for scanning from another screen.
+   they tap it on the phone, or copy the URL for another device.
 
 5. **Teardown.** Tell the user how to stop serving when done:
    ```bash

@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 // Build a self-contained, theme-aware preview page for the expose-dev skill.
 // Emits an HTML file (no external requests, per Artifact CSP) with a big tappable
-// link and a scannable QR for a URL, and/or an embedded screenshot.
+// link and a copyable URL, and/or an embedded screenshot.
 //
 // Usage:
 //   build-preview.mjs --url <url> [--title <t>] [--image <png>] --out <file.html>
 //   build-preview.mjs --image <png> [--title <t>] --out <file.html>
 
-import { execFileSync } from 'node:child_process';
 import { readFileSync, writeFileSync } from 'node:fs';
 
 function parseArgs(argv) {
@@ -29,22 +28,6 @@ const esc = (s = '') =>
   String(s).replace(/[&<>"']/g, (c) =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-function qrSvg(text) {
-  try {
-    // Quiet zone -m 2; qrencode picks the smallest fitting version.
-    return execFileSync('qrencode', ['-t', 'SVG', '-m', '2', '-o', '-', text], {
-      encoding: 'utf8',
-    });
-  } catch (err) {
-    if (err.code === 'ENOENT') {
-      console.error('qrencode not found — install it via the Brewfile (chezmoi apply)');
-    } else {
-      console.error(`qrencode failed: ${err.message}`);
-    }
-    process.exit(1);
-  }
-}
-
 function imgDataUri(path) {
   const b64 = readFileSync(path).toString('base64');
   const ext = path.toLowerCase().endsWith('.jpg') || path.toLowerCase().endsWith('.jpeg')
@@ -57,9 +40,28 @@ const title = args.title || (args.url ? 'Dev preview' : 'Screenshot');
 const linkBlock = args.url
   ? `
     <a class="open" href="${esc(args.url)}">Open ${esc(title)}</a>
-    <code class="url">${esc(args.url)}</code>
-    <div class="qr">${qrSvg(args.url)}</div>
-    <p class="hint">Tap the button on your phone, or scan the QR from another screen.</p>`
+    <div class="urlrow">
+      <code class="url" id="url">${esc(args.url)}</code>
+      <button class="copy" id="copy">Copy</button>
+    </div>
+    <p class="hint">Tap the button to open, or copy the URL for another device.</p>
+    <script>
+      document.getElementById('copy').addEventListener('click', async () => {
+        const url = document.getElementById('url').textContent;
+        const btn = document.getElementById('copy');
+        try {
+          await navigator.clipboard.writeText(url);
+          btn.textContent = 'Copied ✓';
+        } catch {
+          const range = document.createRange();
+          range.selectNodeContents(document.getElementById('url'));
+          getSelection().removeAllRanges();
+          getSelection().addRange(range);
+          btn.textContent = 'Select + copy';
+        }
+        setTimeout(() => (btn.textContent = 'Copy'), 2000);
+      });
+    </script>`
   : '';
 
 const shotBlock = args.image
@@ -85,15 +87,17 @@ const html = `<div class="wrap">
     font-size: 1.05rem;
   }
   .open:active { transform: scale(0.98); }
-  .url {
-    display: block; margin: 0.9rem auto 0; word-break: break-all;
-    font-size: 0.85rem; opacity: 0.7;
+  .urlrow {
+    display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    margin-top: 0.9rem; flex-wrap: wrap;
   }
-  .qr {
-    max-width: 240px; margin: 1.5rem auto 0;
-    background: #fff; padding: 12px; border-radius: 12px;
+  .url { word-break: break-all; font-size: 0.85rem; opacity: 0.7; }
+  .copy {
+    padding: 0.35rem 0.75rem; border-radius: 8px; border: 1px solid currentColor;
+    background: transparent; color: inherit; font: inherit; font-size: 0.85rem;
+    cursor: pointer; opacity: 0.8; flex-shrink: 0;
   }
-  .qr svg { width: 100%; height: auto; display: block; }
+  .copy:active { transform: scale(0.96); }
   .hint { font-size: 0.85rem; opacity: 0.6; margin-top: 1rem; }
   .shot {
     max-width: 100%; height: auto; margin-top: 1.25rem; border-radius: 12px;
