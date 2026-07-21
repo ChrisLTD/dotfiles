@@ -9,9 +9,16 @@
 ## Branching and PRs
 
 - Use git-spice for branch and stack management (`gs branch create`, `gs stack submit`), but only when actually building a stack of dependent branches
-- worktrunk (`wt`) is installed for git worktree management
 - Break multi-part work into stacked branches, one reviewable change per branch
 - Open PRs as drafts
+
+### worktrunk (`wt`) for git worktrees
+
+- `wt switch -c <branch>` — create a worktree + branch (add `-b <base>` to branch off something other than default)
+- `wt switch <branch>` — switch to a worktree; shortcuts: `^` default branch, `-` previous, `@` current, `pr:<N>` a GitHub PR
+- `wt list` — list worktrees and their status
+- `wt merge [target]` — squash, rebase, fast-forward into target (default branch), then remove the worktree
+- `wt remove` — remove the current worktree, deleting the branch if merged (`-D` to force-delete unmerged)
 
 ## GitHub issues
 
