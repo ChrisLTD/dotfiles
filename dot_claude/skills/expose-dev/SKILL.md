@@ -37,8 +37,9 @@ Scripts live in `~/.claude/skills/expose-dev/scripts/`. Invoke them with `bash` 
    ```bash
    bash ~/.claude/skills/expose-dev/scripts/expose.sh <port>
    ```
-   Prints the `https://<machine>.<tailnet>.ts.net` URL. This proxies `localhost:<port>` over
-   the tailnet, so it works even when the dev server binds only to `127.0.0.1`.
+   Prints the tailnet URL (`https://` when the tailnet can provision certs, plain `http://`
+   on Headscale, which can't). This proxies `localhost:<port>` over the tailnet, so it works
+   even when the dev server binds only to `127.0.0.1`.
 
 4. **Build the preview page and publish it.**
    ```bash
@@ -78,9 +79,11 @@ someone *not* on your tailnet:
 
 ## Gotchas
 
-- `tailscale serve` HTTPS needs MagicDNS + HTTPS enabled for the tailnet. If it errors, fall
-  back to binding the dev server to `0.0.0.0` and using `http://<tailnet-ip>:<port>`
-  (`tailscale ip -4`).
+- `expose.sh` picks HTTPS or plain-HTTP serve automatically based on the tailnet's cert
+  support. If serve fails outright, fall back to binding the dev server to `0.0.0.0` and
+  using `http://<tailnet-ip>:<port>` (`tailscale ip -4`), or the LAN IP on shared Wi-Fi.
+- Serve routes by hostname — the URL must use the tailnet DNS name; the bare tailnet IP
+  returns 404. The device needs "Use Tailscale DNS" on.
 - `serve` is private; `funnel` is public — never funnel silently.
 - One port at a time: `serve` mounts at the node's HTTPS root, so exposing a second port
   replaces the first. Re-run `expose.sh` to switch back.
