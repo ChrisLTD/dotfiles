@@ -20,6 +20,10 @@
 - `wt merge [target]` — squash, rebase, fast-forward into target (default branch), then remove the worktree
 - `wt remove` — remove the current worktree, deleting the branch if merged (`-D` to force-delete unmerged)
 
+## Writing in my voice
+
+- Before drafting anything meant to read as me (PR descriptions, review replies, blog posts, commit messages, Slack), read `~/work/agent-docs/voice/VOICE.md` and the per-medium file it points to
+
 ## GitHub issues
 
 - Never reply to GitHub issues on my behalf without asking me first
