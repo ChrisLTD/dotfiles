@@ -12,6 +12,10 @@
  * (integrity-pinned). No local install needed; offline viewing degrades
  * gracefully to plain unhighlighted code.
  *
+ * Pass --self-contained to inline highlight.js and emit body-level markup with
+ * no <html>/<head> wrapper — the shape Claude Artifacts require. The bundle is
+ * fetched once from cdnjs and cached under ~/.cache/pr-narrative-hljs/.
+ *
  * Input schema (narrative.json):
  * {
  *   "title": "PR title",
@@ -52,7 +56,9 @@
  * the block; the after-view stays the default.
  */
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { parseArgs } from "node:util";
 
 type Status = "added" | "modified" | "moved" | "deleted" | "context";
@@ -112,6 +118,55 @@ function extraLanguageTags(chapters: Chapter[]): string {
     .sort()
     .map((l) => `<script src="${CDN_BASE}/languages/${l}.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>`)
     .join("\n");
+}
+
+// ---------------------------------------------------- self-contained inlining
+
+const HLJS_VERSION = "11.11.1";
+
+function hljsCacheDir(): string {
+  const base = process.env.XDG_CACHE_HOME || join(homedir(), ".cache");
+  return join(base, "pr-narrative-hljs", HLJS_VERSION);
+}
+
+/** Fetch a highlight.js asset, caching it on disk so repeat publishes work offline. */
+async function fetchCached(url: string, file: string): Promise<string> {
+  const path = join(hljsCacheDir(), file);
+  if (existsSync(path)) return readFileSync(path, "utf8");
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`${url} -> ${res.status}`);
+  const js = await res.text();
+  mkdirSync(hljsCacheDir(), { recursive: true });
+  writeFileSync(path, js);
+  return js;
+}
+
+/**
+ * Concatenate the highlight.js core bundle plus any extra language grammars into
+ * one string safe to inline in a <script> tag. Returns "" if the assets can't be
+ * fetched, so the page still renders (unhighlighted) offline.
+ */
+async function loadInlineHljs(chapters: Chapter[]): Promise<string> {
+  const extras: string[] = [];
+  for (const ch of chapters) {
+    for (const b of ch.blocks ?? []) {
+      const lang = b.language?.toLowerCase();
+      if (lang && !BUNDLED_LANGS.has(lang) && /^[a-z0-9-]+$/.test(lang) && !extras.includes(lang)) {
+        extras.push(lang);
+      }
+    }
+  }
+  try {
+    const parts = [await fetchCached(HLJS_CDN, "highlight.min.js")];
+    for (const l of extras.sort()) {
+      parts.push(await fetchCached(`${CDN_BASE}/languages/${l}.min.js`, `${l}.min.js`));
+    }
+    // Neutralize any literal </script> in the minified source before inlining.
+    return parts.join("\n").replaceAll("</script", "<\\/script");
+  } catch (err) {
+    console.error(`warning: highlight.js not inlined (${(err as Error).message}); code will render unhighlighted`);
+    return "";
+  }
 }
 
 // ---------------------------------------------------------------- text helpers
@@ -233,7 +288,7 @@ const HLJS_CSS = `
 .hl .hljs-variable, .hl .hljs-name { color: #D6DEE6; }
 `;
 
-function render(data: Narrative): string {
+function render(data: Narrative, opts: { selfContained?: boolean; hljsInline?: string } = {}): string {
   const chapters = data.chapters ?? [];
   const total = chapters.length;
   const chaptersHtml = chapters
@@ -279,14 +334,7 @@ function render(data: Narrative): string {
     ? `<p class="end-links">${endLinkItems.join("\n")}</p>`
     : "";
 
-  return `<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title} — narrative review</title>
-<style>
-:root {
+  const css = `:root {
   --ink: #1E2430;
   --paper: #F7F6F2;
   --paper-edge: #E9E7DF;
@@ -434,10 +482,8 @@ pre.jumplist { font-family: var(--mono); font-size: 0.8rem; line-height: 1.6; ba
   main { scroll-snap-type: none; }
 }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-</style>
-</head>
-<body>
-<div class="progress" id="progress"></div>
+`;
+  const body = `<div class="progress" id="progress"></div>
 <header class="masthead" id="top" data-slide="0">
   <div class="m-left">
     <div class="shape">${esc(data.shape ?? "")}</div>
@@ -463,10 +509,11 @@ ${chaptersHtml}
     ${endLinks}
   </div>
 </section>
-</main>
-<script src="${HLJS_CDN}" integrity="${HLJS_SRI}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-${extraLanguageTags(chapters)}
-<script>
+</main>`;
+  const hljsTags = opts.selfContained
+    ? (opts.hljsInline ? `<script>\n${opts.hljsInline}\n</script>` : "")
+    : `<script src="${HLJS_CDN}" integrity="${HLJS_SRI}" crossorigin="anonymous" referrerpolicy="no-referrer"></script>\n${extraLanguageTags(chapters)}`;
+  const behavior = `<script>
 (function () {
   if (window.hljs) window.hljs.highlightAll();
   var slides = Array.prototype.slice.call(document.querySelectorAll("[data-slide]")).filter(function (el) { return !el.classList.contains("dot"); });
@@ -536,7 +583,24 @@ ${extraLanguageTags(chapters)}
     copy(document.getElementById("jumplist").textContent, cj, "copied");
   });
 })();
-</script>
+</script>`;
+
+  if (opts.selfContained) {
+    return `<style>\n${css}</style>\n${body}\n${hljsTags}\n${behavior}\n`;
+  }
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title} — narrative review</title>
+<style>
+${css}</style>
+</head>
+<body>
+${body}
+${hljsTags}
+${behavior}
 </body>
 </html>`;
 }
@@ -545,17 +609,22 @@ ${extraLanguageTags(chapters)}
 
 async function main(): Promise<void> {
   const { values, positionals } = parseArgs({
-    options: { output: { type: "string", short: "o" } },
+    options: {
+      output: { type: "string", short: "o" },
+      "self-contained": { type: "boolean", short: "s" },
+    },
     allowPositionals: true,
   });
   const input = positionals[0];
   if (!input) {
-    console.error("usage: node render_html.ts narrative.json [-o out.html]");
+    console.error("usage: node render_html.ts narrative.json [-o out.html] [--self-contained]");
     process.exit(1);
   }
   const data: Narrative = JSON.parse(readFileSync(input, "utf8"));
   const out = values.output ?? input.replace(/\.json$/, "") + ".html";
-  writeFileSync(out, render(data));
+  const selfContained = Boolean(values["self-contained"]);
+  const hljsInline = selfContained ? await loadInlineHljs(data.chapters ?? []) : undefined;
+  writeFileSync(out, render(data, { selfContained, hljsInline }));
   console.log(`wrote ${out}`);
 }
 
