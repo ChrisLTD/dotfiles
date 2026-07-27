@@ -15,14 +15,25 @@ local BRANCH_GLYPH = utf8.char(0xe0a0)
 local FOLDER_GLYPH = wezterm.nerdfonts.md_folder
 local SCHEME_GLYPH = wezterm.nerdfonts.md_palette
 
+-- local filesystem path for the pane's cwd, or nil. Raises rather than returning
+-- nil when the pane has already left the mux, which happens routinely because
+-- update-right-status fires against a pane that can close before we get here.
+local function pane_path(pane)
+	local ok, cwd = pcall(pane.get_current_working_dir, pane)
+	if not ok or not cwd or cwd.scheme ~= "file" or not cwd.file_path then
+		return nil
+	end
+	return cwd.file_path
+end
+
 -- basename of the pane's cwd ("" if unavailable or not a local path)
 local function pane_dir(pane)
-	local cwd = pane:get_current_working_dir()
-	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
+	local path = pane_path(pane)
+	if not path then
 		return ""
 	end
 	-- basename, or "/" when at the filesystem root
-	return cwd.file_path:match("([^/]+)/?$") or "/"
+	return path:match("([^/]+)/?$") or "/"
 end
 
 -- git branch for the pane's cwd ("" outside a repo), with the same prefix
@@ -38,11 +49,10 @@ local BRANCH_TTL = 5
 local branch_cache = {}
 
 local function pane_branch(pane)
-	local cwd = pane:get_current_working_dir()
-	if not cwd or cwd.scheme ~= "file" or not cwd.file_path then
+	local path = pane_path(pane)
+	if not path then
 		return ""
 	end
-	local path = cwd.file_path
 	local id = pane:pane_id()
 	local now = os.time()
 	local cached = branch_cache[id]
@@ -88,6 +98,15 @@ end
 -- flash a scheme name in the left status, prefixed with the palette glyph
 local function flash_scheme(window, scheme)
 	flash(window, "     " .. SCHEME_GLYPH .. " " .. scheme .. "  ")
+end
+
+-- current scheme per window. augment-command-palette runs synchronously, so it cannot call
+-- effective_config/get_config_overrides to ask wezterm; this table is the only way to know.
+local current_scheme = {}
+
+local function apply_scheme(window, scheme)
+	window:set_config_overrides({ color_scheme = scheme })
+	current_scheme[window:window_id()] = scheme
 end
 
 -- step forward/back through the active scheme list; assigned below the lists.
@@ -172,10 +191,13 @@ wezterm.on("update-right-status", function(window, pane)
 	-- powerline symbols: https://github.com/ryanoasis/powerline-extra-symbols
 	local SYMBOL = utf8.char(0xe0ba)
 
-	-- Grab the current window's configuration
-	local color_scheme = window:effective_config().resolved_palette
-	local bg = color_scheme.background
-	local fg = color_scheme.foreground
+	-- resolved_palette is only populated once color_scheme or colors is set, and this
+	-- config sets the scheme purely as a runtime override. So it comes back empty on a
+	-- fresh window and again whenever an override is cleared, until window-config-reloaded
+	-- rolls a scheme in.
+	local palette = window:effective_config().resolved_palette
+	local bg = palette.background
+	local fg = palette.foreground
 
 	-- branch mode prefers the branch, falling back to the cwd basename outside a
 	-- repo; cwd mode always shows the cwd basename; both mode always shows cwd +
@@ -197,6 +219,13 @@ wezterm.on("update-right-status", function(window, pane)
 		text = " " .. FOLDER_GLYPH .. " " .. dir .. " " .. BRANCH_GLYPH .. " " .. branch:sub(1, 13) .. " "
 	else
 		text = " " .. BRANCH_GLYPH .. " " .. branch .. " "
+	end
+
+	-- without both colors the powerline arrow has nothing to blend against, so draw
+	-- unstyled and inherit the terminal defaults instead of formatting with nil
+	if not (bg and fg) then
+		window:set_right_status(wezterm.format({ { Text = text } }))
+		return
 	end
 
 	window:set_right_status(wezterm.format({
@@ -317,12 +346,13 @@ cycle_scheme = function(window, delta)
 		end
 	end
 	local scheme = schemes[(idx - 1 + delta) % #schemes + 1]
-	window:set_config_overrides({ color_scheme = scheme })
+	apply_scheme(window, scheme)
 	flash_scheme(window, scheme)
 end
 
 wezterm.on("window-config-reloaded", function(window, _)
 	local current = (window:get_config_overrides() or {}).color_scheme
+	current_scheme[window:window_id()] = current
 	if current == fav_theme.light or current == fav_theme.dark then
 		return
 	end
@@ -334,17 +364,17 @@ wezterm.on("window-config-reloaded", function(window, _)
 		end
 	end
 	local scheme = schemes[math.random(#schemes)]
-	window:set_config_overrides({ color_scheme = scheme })
+	apply_scheme(window, scheme)
 	flash_scheme(window, scheme)
 end)
 
 wezterm.on("augment-command-palette", function(window, _)
 	return {
 		{
-			brief = "Scheme: " .. (window:effective_config().color_scheme or "default"),
+			brief = "Scheme: " .. (current_scheme[window:window_id()] or "default"),
 			icon = "md_palette",
 			action = wezterm.action_callback(function(win, _)
-				flash_scheme(win, win:effective_config().color_scheme or "default")
+				flash_scheme(win, current_scheme[win:window_id()] or "default")
 			end),
 		},
 		{
@@ -365,22 +395,23 @@ wezterm.on("augment-command-palette", function(window, _)
 		{
 			brief = "Theme: " .. fav_theme.dark,
 			icon = "md_weather_night",
-			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({ color_scheme = fav_theme.dark })
+			action = wezterm.action_callback(function(win, _)
+				apply_scheme(win, fav_theme.dark)
 			end),
 		},
 		{
 			brief = "Theme: Catppuccin Light",
 			icon = "md_weather_sunny",
-			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({ color_scheme = fav_theme.light })
+			action = wezterm.action_callback(function(win, _)
+				apply_scheme(win, fav_theme.light)
 			end),
 		},
 		{
 			brief = "Theme: Random",
 			icon = "md_shuffle",
-			action = wezterm.action_callback(function(window, _)
-				window:set_config_overrides({})
+			action = wezterm.action_callback(function(win, _)
+				win:set_config_overrides({})
+				current_scheme[win:window_id()] = nil
 			end),
 		},
 		{
@@ -388,9 +419,10 @@ wezterm.on("augment-command-palette", function(window, _)
 				.. (wezterm.GLOBAL.follow_os_appearance and "on" or "off")
 				.. ")",
 			icon = "md_theme_light_dark",
-			action = wezterm.action_callback(function(window, _)
+			action = wezterm.action_callback(function(win, _)
 				wezterm.GLOBAL.follow_os_appearance = not wezterm.GLOBAL.follow_os_appearance
-				window:set_config_overrides({})
+				win:set_config_overrides({})
+				current_scheme[win:window_id()] = nil
 			end),
 		},
 	}
