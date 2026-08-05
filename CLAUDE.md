@@ -20,6 +20,9 @@ This repo is managed with [chezmoi](https://www.chezmoi.io/). It handles both do
 | `run_once_after_ssh-key-reminder.sh` | — | Prints a reminder at the end of the first `chezmoi apply` if no SSH key or 1Password SSH agent is found (needed for GitHub pushes, not for bootstrap). Never fails the apply |
 | `scripts/setup-toolbox.sh` | — | Run inside a Fedora toolbox; installs shared CLIs (rendered via `chezmoi execute-template`), a `TOOLBOX_ONLY` dnf array (zsh, gcc, make, python3-pip, rust, cargo, wl-clipboard), and a non-dnf section for tools without Fedora packages (mise/tlrc/yazi via cargo, pnpm via corepack, goose [pressly] and git-spice via `go install`). Ignored by chezmoi via `.chezmoiignore` |
 | `scripts/setup-ptyxis.sh` | — | **Experimental, untested.** Run on the host after `toolbox create`; configures the default Ptyxis profile to launch `/usr/bin/zsh -l` inside the toolbox via `gsettings` |
+| `archive/` | — | Retired configs kept for reference, deployed nowhere. Ignored by chezmoi via `.chezmoiignore` |
+
+Removing a file from the source directory does not remove it from `~`; chezmoi leaves orphaned targets in place. Archiving something means moving it under `archive/` **and** deleting the deployed copy by hand.
 
 Neovim config is pulled via `.chezmoiexternal.toml` from a separate git repo (`ChrisLTD/nvim`), over HTTPS so a fresh machine can bootstrap with no SSH key. It probes `vim.fn.executable("tree-sitter")` — that comes from the `tree-sitter-cli` package on both platforms (the plain `tree-sitter` brew formula and dnf package are just the C library, no binary).
 
