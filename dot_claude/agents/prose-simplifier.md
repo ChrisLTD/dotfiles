@@ -20,6 +20,7 @@ The invoking prompt gives you a base branch and, if one exists, a PR number.
 - Keep and tighten only "why" comments on genuinely non-obvious decisions.
 - Match the surrounding file's comment density and idiom. If the file is sparsely commented, err toward deleting.
 - Apply edits directly with the Edit tool.
+- Never run tests or builds — your edits only touch comments and cannot change behavior. Running the linter on the files you edited is fine, since lint rules can constrain comment formatting.
 
 ## PR description rules
 
