@@ -10,6 +10,7 @@
 
 - Use git-spice for branch and stack management (`gs branch create`, `gs stack submit`), but only when actually building a stack of dependent branches
 - Break multi-part work into stacked branches, one reviewable change per branch
+- Lean toward splitting a PR into a stack when lines added exceed ~1,000 (excluding generated/vendored code like lockfiles or codegen output; test code still counts)
 - Open PRs as drafts
 
 ### worktrunk (`wt`) for git worktrees
