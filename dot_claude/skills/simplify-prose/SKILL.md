@@ -5,7 +5,7 @@ description: Launch a Sonnet sub-agent to simplify the code comments and PR desc
 
 # Simplify prose
 
-Hand the branch's comments and PR description to a fresh Sonnet sub-agent for a simplification pass. **Comment edits are applied directly; the PR description is only drafted** — it never goes to GitHub without approval.
+Hand the branch's comments and PR description to a fresh Sonnet sub-agent for a simplification pass. Comment edits and the rewritten PR description are both applied directly, with the old description saved so it can be restored on request.
 
 ## Step 1: Determine scope
 
@@ -19,9 +19,17 @@ Launch the `prose-simplifier` agent (one agent, foreground) with the base branch
 
 Show the agent's edit list numbered for easy reference (top-level: 1., 2., 3.; sub-items: 2a., 2b.). Note that the edits are already applied and reviewable via `git diff`. If the user objects to any item ("3: revert"), revert that hunk.
 
-## Step 4: Present the PR description draft
+## Step 4: Post the PR description
 
-Show the drafted title and body verbatim. Only after the user approves, apply with `gh pr edit --title --body`, keeping any manually added content (screenshots, video links) the agent carried over. If no PR exists, just leave the draft for later use.
+If no PR exists, show the draft for later use and stop here.
+
+Otherwise:
+
+1. Save the current title and body first: `gh pr view <number> --json title,body > <scratchpad>/pr-desc-before.json`.
+2. Post the draft with `gh pr edit --title --body`, keeping any manually added content (screenshots, video links) the agent carried over.
+3. Show the posted title and body verbatim, say it is live on the PR, and offer to revert.
+
+If the user asks to revert, restore the title and body from `pr-desc-before.json`.
 
 ## Step 5: Leave the tree uncommitted
 

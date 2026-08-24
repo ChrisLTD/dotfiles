@@ -32,7 +32,7 @@ Before drafting, read `~/work/agent-docs/voice/VOICE.md` and the per-medium file
 - No em dashes. No parenthetical pile-ups.
 - Don't restate implementation details the diff already shows.
 
-**Never run `gh pr edit`.** The draft goes back to the main model for user approval.
+**Never run `gh pr edit`.** The draft goes back to the main model, which posts it.
 
 ## Output
 
