@@ -105,11 +105,10 @@ use `pr-screenshots` instead — a still is faster to review and easier to comme
 ## Alternative: recording with playwright-cli
 
 When the clip needs to show *where* each click landed, `playwright-cli` is the
-better recorder. `video-show-actions` draws a synthetic cursor, a marker at the
-click point, a highlight on the target element, and a label naming the action,
-which is the one thing the harness path cannot do. It also writes the WebM
-straight to the filename you give it, so step 3's `find` and step 6's
-`test-results` cleanup both disappear.
+better recorder: `video-show-actions` draws a synthetic cursor, a marker at the
+click point, a highlight on the target element, and a label naming the action.
+It also writes the WebM straight to the filename you give it, so step 3's `find`
+and step 6's `test-results` cleanup both disappear.
 
 Run it through the repo's own Playwright, which needs no install and matches the
 version the specs use. The examples write `playwright-cli` for brevity; the real

@@ -72,7 +72,7 @@ env) so screenshots reflect the working-tree code. Reuses the harness's Auth0 lo
 ## One-off captures with playwright-cli
 
 For a single screenshot that nobody needs to reproduce, `playwright-cli` skips the
-temporary spec and the cleanup entirely:
+temporary spec and the cleanup entirely.
 
 Run it through the repo's own Playwright, which needs no install and matches the
 version the specs use. The examples write `playwright-cli` for brevity; the real
