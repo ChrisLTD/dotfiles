@@ -69,6 +69,31 @@ env) so screenshots reflect the working-tree code. Reuses the harness's Auth0 lo
 
 5. **Deliver** the images (SendUserFile) so they're on hand for the PR.
 
+## One-off captures with playwright-cli
+
+For a single screenshot that nobody needs to reproduce, `playwright-cli` skips the
+temporary spec and the cleanup entirely.
+
+Run it through the repo's own Playwright, which needs no install and matches the
+version the specs use. The examples write `playwright-cli` for brevity; the real
+invocation is `pnpm --filter @measured/e2e-tests exec playwright cli`.
+
+```bash
+playwright-cli -s=shot open
+playwright-cli -s=shot state-load "$PWD/e2e/.auth/admin.local.json"
+playwright-cli -s=shot goto http://localhost:3333/applications
+playwright-cli -s=shot screenshot --filename=.scratch/screenshots/01-list.png
+playwright-cli -s=shot close
+```
+
+Auth still comes from the harness, so refresh it first with `--project={app}-setup`
+when the saved state is older than 4 minutes; a stale file fails silently and lands
+you on the Auth0 login page. Its default action timeout is 5s, which these apps can
+exceed on a cold route, so `goto` and retry rather than assuming the element is missing.
+
+Use the spec-driven path above for anything you will want to re-capture after a
+change, and for a set of shots that has to stay consistent across runs.
+
 ## Gotchas
 
 - Prefer a fixed viewport over `fullPage` for long tables — a full-page shot of a

@@ -37,3 +37,11 @@
 - **Never** add comments to note that "changes were made" or explain the obvious.
 - Comments should only be used to explain "why" complex architectural decisions were made, not "what" the code is doing.
 - Code should be self-documenting through clear, expressive variable and function names.
+
+## Browser automation
+
+- `playwright-cli` drives a long-lived browser from single shell commands. Use it to click through a running app, confirm a UI change, or pull real locators off a page without authoring a spec.
+- Run it through the repo's own Playwright (`pnpm --filter <pkg> exec playwright cli`), which matches the version that repo's specs run against and needs no install. Don't `npm install -g` it: that lands inside the mise-managed node and disappears on the next node bump.
+- It ships its own agent skill covering the full command surface; the path is printed at the top of `playwright-cli --help`. Don't restate those commands in notes, and don't track a copy in this repo, since npm regenerates it.
+- Repo-specific setup (auth reuse, local ports, testid conventions) belongs in that repo's docs. For measured-app, see "Browser automation for agents" in `e2e/README.md`.
+- Name sessions (`-s=advisor`) and close them when done; they outlive the command that created them.
