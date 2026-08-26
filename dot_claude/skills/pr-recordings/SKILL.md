@@ -102,12 +102,40 @@ use `pr-screenshots` instead — a still is faster to review and easier to comme
 
 7. **Deliver** the MP4 (SendUserFile) so it's on hand for the PR.
 
+## Alternative: recording with playwright-cli
+
+When the clip needs to show *where* each click landed, `playwright-cli` is the
+better recorder. `video-show-actions` draws a synthetic cursor, a marker at the
+click point, a highlight on the target element, and a label naming the action,
+which is the one thing the harness path cannot do. It also writes the WebM
+straight to the filename you give it, so step 3's `find` and step 6's
+`test-results` cleanup both disappear.
+
+```bash
+playwright-cli -s=rec open
+playwright-cli -s=rec state-load "$PWD/e2e/.auth/admin.local.json"
+playwright-cli -s=rec goto http://localhost:3333/applications
+playwright-cli -s=rec video-start flow.webm
+playwright-cli -s=rec video-show-actions --duration=1500
+# ...drive the flow, one command per step...
+playwright-cli -s=rec video-chapter "Reviewing the application"
+playwright-cli -s=rec video-stop
+playwright-cli -s=rec close
+```
+
+Transcode the result with the same HandBrake command in step 4. Auth comes from
+the harness either way, so refresh it first with
+`--project={app}-setup` when the saved state is older than 4 minutes.
+
+Stay with the spec-driven path above when the recording is of a flow you will
+want to re-record later; a spec reruns, a CLI sequence does not.
+
 ## Gotchas
 
 - **No mouse cursor.** Chromium's screencast doesn't composite the pointer, so
-  clicks are invisible — the UI just reacts. If a reviewer needs to see *where*
-  the interaction happened, narrate it in the PR description or fall back to
-  screenshots with the target visibly focused.
+  clicks are invisible and the UI just reacts. Either record with `playwright-cli`
+  instead (see below), narrate the interaction in the PR description, or fall back
+  to screenshots with the target visibly focused.
 - **Keep it under ~20 seconds.** Reviewers scrub, and a long clip buries the one
   moment you wanted them to see. Record one flow per test; several short clips
   beat one long one.
