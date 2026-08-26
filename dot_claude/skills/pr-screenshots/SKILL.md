@@ -74,9 +74,9 @@ env) so screenshots reflect the working-tree code. Reuses the harness's Auth0 lo
 For a single screenshot that nobody needs to reproduce, `playwright-cli` skips the
 temporary spec and the cleanup entirely:
 
-Run it through the repo's own Playwright (`pnpm --filter @measured/e2e-tests exec
-playwright cli`) so it matches the version the specs use; the examples below write
-`playwright-cli` for brevity, which is the Homebrew formula.
+Run it through the repo's own Playwright, which needs no install and matches the
+version the specs use. The examples write `playwright-cli` for brevity; the real
+invocation is `pnpm --filter @measured/e2e-tests exec playwright cli`.
 
 ```bash
 playwright-cli -s=shot open

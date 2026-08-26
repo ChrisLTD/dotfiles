@@ -41,7 +41,7 @@
 ## Browser automation
 
 - `playwright-cli` drives a long-lived browser from single shell commands. Use it to click through a running app, confirm a UI change, or pull real locators off a page without authoring a spec.
-- In a repo that already depends on Playwright, run it through that dependency (`pnpm --filter <pkg> exec playwright cli`) so it matches the version the specs run against. The `playwright-cli` Homebrew formula covers everything else; don't `npm install -g` it, since that lands inside the mise-managed node and disappears on the next node bump.
+- Run it through the repo's own Playwright (`pnpm --filter <pkg> exec playwright cli`), which matches the version that repo's specs run against and needs no install. Don't `npm install -g` it: that lands inside the mise-managed node and disappears on the next node bump.
 - It ships its own agent skill covering the full command surface; the path is printed at the top of `playwright-cli --help`. Don't restate those commands in notes, and don't track a copy in this repo, since npm regenerates it.
 - Repo-specific setup (auth reuse, local ports, testid conventions) belongs in that repo's docs. For measured-app, see "Browser automation for agents" in `e2e/README.md`.
 - Name sessions (`-s=advisor`) and close them when done; they outlive the command that created them.
