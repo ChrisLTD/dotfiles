@@ -26,13 +26,14 @@ This downloads chezmoi to `~/.local/bin/chezmoi` (which is on PATH on Fedora by 
 
 ### 3. (Optional) SSH key for pushing changes back
 
-The repo is public, so HTTPS clone works without auth. If you plan to commit and push edits from this machine, add an SSH key to GitHub and switch the chezmoi source remote to SSH:
+The repo is public, so HTTPS clone works without auth — fetches and `chezmoi update` never need a key. If you plan to commit and push edits from this machine, add an SSH key to GitHub:
 
 ```sh
 ssh-keygen -t ed25519 -C "your_email@example.com"
 # Add ~/.ssh/id_ed25519.pub at https://github.com/settings/keys
-git -C "$(chezmoi source-path)" remote set-url origin git@github.com:ChrisLTD/dotfiles.git
 ```
+
+No remote changes needed: the deployed `~/.gitconfig` rewrites pushes to `github.com` from HTTPS to SSH (`pushInsteadOf`), so pushing works as soon as the key is registered.
 
 ### Subsequent runs
 
@@ -48,24 +49,24 @@ chezmoi update                 # pull latest from git and apply
 | `~/.zshrc` | Shell config |
 | `~/.zprofile` | gcloud SDK path (skipped silently if SDK not installed) |
 | `~/.gitconfig` | Git config — email is templated per machine |
-| `~/.config/git/ignore` | Global gitignore |
+| `~/.gitignore` | Global gitignore — wired via `core.excludesfile` in `~/.gitconfig` |
 | `~/.tmux.conf` | Tmux config |
 | `~/.wezterm.lua` | WezTerm config |
 | `~/.config/yazi/yazi.toml` | Yazi file manager config |
 | `~/.config/nvim/` | Neovim — cloned from [ChrisLTD/nvim](https://github.com/ChrisLTD/nvim) via external |
-| `~/.claude/settings.json` | Claude Code settings |
+| `~/.claude/CLAUDE.md` | Claude Code global instructions |
 | `~/.claude/agents/` | Claude Code custom agents |
 | `~/.claude/commands/` | Claude Code slash commands |
+| `~/.claude/skills/` | Claude Code skills |
 | `~/.claude-business/agents/` | Symlink → `~/.claude/agents/` |
 | `~/.claude-business/commands/` | Symlink → `~/.claude/commands/` |
-| `~/.claude-business/settings.json` | Claude Code settings for the business profile |
 | `~/.Brewfile` | Homebrew bundle — formulas and casks for macOS |
 
 ## Package installation
 
 `chezmoi apply` automatically runs platform-specific install scripts:
 
-- **Mac** (`run_onchange_install-mac-packages.sh.tmpl`): installs Homebrew if missing, then runs `brew bundle --global` using `~/.Brewfile`. Re-runs automatically whenever `~/.Brewfile` changes.
+- **Mac** (`run_onchange_install-mac-packages.sh.tmpl`): installs Homebrew if missing, then runs `brew bundle --global --no-upgrade` using `~/.Brewfile`. Re-runs automatically whenever `~/.Brewfile` changes.
 - **Fedora Silverblue** (`run_onchange_install-fedora-packages.sh.tmpl`): adds Flathub remote, installs Flatpak apps, and applies GNOME settings via `gsettings`.
 
 Each script guards itself with an OS check and exits immediately on the wrong platform.

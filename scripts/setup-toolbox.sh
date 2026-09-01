@@ -41,9 +41,13 @@ TOOLBOX_ONLY=(
 
 sudo dnf install -y "${SHARED_DNF[@]}" "${TOOLBOX_ONLY[@]}"
 
-# GitHub Copilot CLI extension
-if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
-  gh extension install github/gh-copilot
+# GitHub Copilot CLI extension (needs an authenticated gh)
+if gh auth status &>/dev/null; then
+  if ! gh extension list 2>/dev/null | grep -q "gh-copilot"; then
+    gh extension install github/gh-copilot
+  fi
+else
+  echo "gh is not authenticated; skipping gh-copilot extension. Run 'gh auth login' and re-run this script." >&2
 fi
 
 # --- Tools not in dnf (each guarded so re-runs are quick) ---
@@ -77,5 +81,5 @@ fi
 
 # git-spice — stacked PR manager (https://github.com/abhinav/git-spice)
 if ! command -v gs >/dev/null; then
-  go install go.abhg.dev/gs/cmd/gs@latest
+  go install go.abhg.dev/gs@latest
 fi

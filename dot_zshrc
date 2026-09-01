@@ -15,9 +15,9 @@ setopt SHARE_HISTORY          # share history live across running shells
 autoload -Uz compinit && compinit
 
 # Set up fzf key bindings and fuzzy completion
-source <(fzf --zsh)
+command -v fzf >/dev/null && source <(fzf --zsh)
 export PATH="$HOME/.local/bin:$HOME/go/bin:$PATH"
-eval "$(mise activate zsh)"
+command -v mise >/dev/null && eval "$(mise activate zsh)"
 export GOPRIVATE="github.com/measured-fi"
 
 
@@ -25,7 +25,7 @@ export GOPRIVATE="github.com/measured-fi"
 alias claude-work='CLAUDE_CONFIG_DIR=~/.claude-business claude'
 
 # zoxide
-eval "$(zoxide init zsh)"
+command -v zoxide >/dev/null && eval "$(zoxide init zsh)"
 
 # pnpm
 alias pn='pnpm'
