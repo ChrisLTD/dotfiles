@@ -5,7 +5,7 @@ description: Launch a Sonnet sub-agent to simplify the code comments and PR desc
 
 # Simplify prose
 
-Hand the branch's comments and PR description to a fresh Sonnet sub-agent for a simplification pass. Comment edits and the rewritten PR description are both applied directly, with the old description saved so it can be restored on request.
+Hand the branch's comments and PR description to a fresh Sonnet sub-agent for a simplification pass. Comment edits are applied and committed, and the rewritten PR description is posted, with the old description saved so it can be restored on request.
 
 ## Step 1: Determine scope
 
@@ -17,7 +17,7 @@ Launch the `prose-simplifier` agent (one agent, foreground) with the base branch
 
 ## Step 3: Report the comment edits
 
-Show the agent's edit list numbered for easy reference (top-level: 1., 2., 3.; sub-items: 2a., 2b.). Note that the edits are already applied and reviewable via `git diff`. If the user objects to any item ("3: revert"), revert that hunk.
+Show the agent's edit list numbered for easy reference (top-level: 1., 2., 3.; sub-items: 2a., 2b.). Note that the edits are already applied and reviewable via `git diff`. If the user objects to any item ("3: revert"), revert that hunk, and amend the commit if Step 5 already ran.
 
 ## Step 4: Post the PR description
 
@@ -31,6 +31,12 @@ Otherwise:
 
 If the user asks to revert, restore the title and body from `pr-desc-before.json`.
 
-## Step 5: Leave the tree uncommitted
+## Step 5: Commit the comment edits
 
-Do not commit. The comment edits stay in the working tree for the user to fold into the branch.
+Stage only the files the agent edited, not unrelated work in the tree. Commit them with a short message such as `Simplify comments`. Skip this step if the agent made no comment edits.
+
+If those files also carry uncommitted changes from before the pass, they ride along in the commit. Say so in the report and pick a message that covers the whole set.
+
+If the branch has an upstream, push so the PR matches the description that was just posted.
+
+Report the commit and tell the user how to undo it (`git reset HEAD~1`).

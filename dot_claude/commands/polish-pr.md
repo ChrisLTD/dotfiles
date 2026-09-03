@@ -39,4 +39,4 @@ comments, and the PR description should describe the branch as it finally stands
 
 Report in one block: which review flavor ran, how many findings were confirmed and how many
 the user chose to fix, the verify result, and the count of comment edits the prose pass made.
-Leave everything uncommitted unless the user asks otherwise.
+The prose pass commits what it touches. Leave the rest uncommitted unless the user asks otherwise.
