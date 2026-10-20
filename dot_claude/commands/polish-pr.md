@@ -33,7 +33,7 @@ failing check until it passes. Do not proceed with failures outstanding.
 
 ## Stage 4 — Prose
 
-Invoke the `simplify-prose` skill. It runs last on purpose: the fixes from stage 2 add new
+Invoke the `prose-simplify` skill. It runs last on purpose: the fixes from stage 2 add new
 comments, and the PR description should describe the branch as it finally stands.
 
 ## Wrap-up

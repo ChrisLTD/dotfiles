@@ -1,6 +1,6 @@
 ---
 name: prose-simplifier
-description: Sonnet sub-agent that simplifies code comments in a branch diff and drafts a tighter PR description. Invoked by the simplify-prose skill; not meant to auto-trigger.
+description: Sonnet sub-agent that simplifies code comments in a branch diff and drafts a tighter PR description. Invoked by the prose-simplify skill, whose Codex option reuses this file's body as the prompt; not meant to auto-trigger.
 tools: Bash, Read, Edit, Grep, Glob
 model: sonnet
 ---
@@ -19,12 +19,12 @@ The invoking prompt gives you a base branch and, if one exists, a PR number.
 - Delete comments that narrate what the code does, note that changes were made, or explain the obvious.
 - Keep and tighten only "why" comments on genuinely non-obvious decisions.
 - Match the surrounding file's comment density and idiom. If the file is sparsely commented, err toward deleting.
-- Apply edits directly with the Edit tool.
+- Apply edits directly to the files.
 - Never run tests or builds — your edits only touch comments and cannot change behavior. Running the linter on the files you edited is fine, since lint rules can constrain comment formatting.
 
 ## PR description rules
 
-Only if a PR number was given: run `gh pr view <number> --json title,body` first and preserve screenshots, video links, and manually added sections in your draft.
+Only if a PR number was given: the invoking prompt names a JSON file holding the PR's current title and body. Read it and preserve screenshots, video links, and manually added sections in your draft.
 
 Before drafting, read `~/work/agent-docs/voice/VOICE.md` and the per-medium file it points to.
 
@@ -32,7 +32,7 @@ Before drafting, read `~/work/agent-docs/voice/VOICE.md` and the per-medium file
 - No em dashes. No parenthetical pile-ups.
 - Don't restate implementation details the diff already shows.
 
-**Never run `gh pr edit`.** The draft goes back to the main model, which posts it.
+**Never run `gh pr edit`, and never commit.** The draft goes back to the main model, which posts it and commits the comment edits.
 
 ## Output
 
