@@ -19,12 +19,14 @@ Check whether a PR exists with `gh pr view --json number,baseRefName`. If yes, u
 Both editors get the same brief: the base branch, the PR number and the path to `pr-desc-before.json` (if a PR exists), and the instruction to edit comments on the diff's added/changed lines directly and return a drafted PR description without posting it.
 
 - `sonnet`: launch the `prose-simplifier` agent (one agent, foreground) with that brief.
-- `codex`: the agent file's body is the prompt. Prepend the brief and pipe it in from the repo root:
+- `codex`: the agent file's body is the prompt. Write the brief plus that body to a scratchpad file, then run codex from the repo root as its own command:
 
   ```sh
-  { echo "Base branch: <base>. PR: <number or none>. Current PR title/body: <path or none>."; awk 'c>=2{print} /^---$/{c++}' ~/.claude/agents/prose-simplifier.md; } \
-    | codex exec --skip-git-repo-check -s workspace-write -m gpt-6.1-sol -c model_reasoning_effort="medium" -o <scratchpad>/prose-codex.md -
+  { echo "Base branch: <base>. PR: <number or none>. Current PR title/body: <path or none>."; awk 'c>=2{print} /^---$/{c++}' ~/.claude/agents/prose-simplifier.md; } > <scratchpad>/prose-prompt.md
+  codex exec --skip-git-repo-check -s workspace-write -m gpt-6.1-sol -c model_reasoning_effort="medium" -o <scratchpad>/prose-codex.md - < <scratchpad>/prose-prompt.md
   ```
+
+  Keep these as two separate Bash calls. The `codex exec` prefix has a permissions allow rule, which only matches when the command starts with it.
 
   Read the edit list and draft from `prose-codex.md` rather than scraping the transcript. The workspace-write sandbox lets Codex edit files but blocks network, which is why the PR title and body travel as a file instead of a `gh` call.
 
