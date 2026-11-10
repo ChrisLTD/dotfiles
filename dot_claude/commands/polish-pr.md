@@ -1,6 +1,6 @@
 ---
 description: Full pre-review polish - panel or roundtable review, apply the fixes, verify, then run the prose pass
-argument-hint: "[panel|roundtable]"
+argument-hint: "[panel|roundtable [codex|copilot|both]]"
 ---
 
 Take the current branch from "code is written" to "ready for human review" in four stages.
@@ -10,8 +10,9 @@ Stages 2 and 3 depend on the user's decisions in stage 1, so do not run ahead.
 
 Pick the reviewer flavor from `$ARGUMENTS`:
 
-- `roundtable` — read `~/.claude/commands/roundtable.md` and follow it (Claude + Codex + Copilot).
-  Use when the change is risky enough to be worth three independent engines.
+- `roundtable` — read `~/.claude/commands/roundtable.md` and follow it (Claude + Codex and/or Copilot).
+  Pass the second word of `$ARGUMENTS` (`codex`, `copilot`, or `both`) through as its argument.
+  Use when the change is risky enough to be worth independent engines.
 - `panel`, or no argument — read `~/.claude/commands/expert-panel.md` and follow it
   (Claude sub-agents, one per expert lens). This is the default.
 
@@ -32,11 +33,11 @@ failing check until it passes. Do not proceed with failures outstanding.
 
 ## Stage 4 — Prose
 
-Invoke the `simplify-prose` skill. It runs last on purpose: the fixes from stage 2 add new
+Invoke the `prose-simplify` skill. It runs last on purpose: the fixes from stage 2 add new
 comments, and the PR description should describe the branch as it finally stands.
 
 ## Wrap-up
 
 Report in one block: which review flavor ran, how many findings were confirmed and how many
 the user chose to fix, the verify result, and the count of comment edits the prose pass made.
-Leave everything uncommitted unless the user asks otherwise.
+The prose pass commits what it touches. Leave the rest uncommitted unless the user asks otherwise.
