@@ -1,5 +1,5 @@
 ---
-description: Roundtable-review the current branch or stack, fix high and medium findings, open draft PRs, then run the prose pass
+description: Roundtable-review the current branch or stack, fix high and medium findings, open draft PRs with screenshots, then run the prose pass
 argument-hint: "[codex|copilot|both]"
 ---
 
@@ -7,23 +7,32 @@ Take the current branch, or every branch in its stack, from "code is written" to
 open and polished" without stopping for approval. `$ARGUMENTS` picks the external reviewer
 and defaults to `codex`.
 
+Pass `--no-prompt` to every `gs` command so nothing waits on input. Never pass `--force` or
+`--no-verify`. If any restack, push, or submit fails, stop and report rather than working
+around it.
+
 ## Step 0 — Work out the branch list
 
-Run `gs --no-prompt log short --json`.
+Stop if the current branch is the default branch or the working tree is not clean.
 
-- **Stack mode:** the command succeeds and lists more than one non-trunk branch. The list is
-  those branches, bottom-up. Each branch's base is its parent in the stack.
-- **Single mode:** anything else, including the command failing because the repo is not
-  initialized for git-spice or the branch is untracked. The list is the current branch alone.
-  Its base is its open PR's base branch (`gh pr view --json baseRefName`) or, with no PR, the
-  default branch. Do not initialize git-spice or track the branch.
+Check `git rev-parse -q --verify refs/spice/data` first. `gs` initializes a repo as a side
+effect of any command, so do not run it when that ref is missing.
 
-If the current branch is the default branch, or the working tree has uncommitted changes that
-are not part of the work being shipped, stop and say so.
+- **Stack mode:** the ref exists, and `gs --no-prompt log short --json` includes an object
+  with `"current": true` for this branch plus at least one other non-trunk branch. Without
+  the `current` object the branch is untracked and the output is other people's branches,
+  not this stack. The objects arrive in no particular order: sort them parents first using
+  each one's `down.name`, and drop the trunk. Each branch's base is its `down.name`.
+- **Single mode:** anything else. The list is the current branch alone. Its base is its open
+  PR's base branch (`gh pr view --json baseRefName`) or, with no PR, the default branch. Do
+  not initialize git-spice or track the branch.
+
+Stack mode only: run `gs stack restack` now, so the review sees each branch on top of its
+current parent.
 
 ## Step 1 — Review and fix, per branch
 
-For each branch in the list, bottom-up:
+For each branch in the list, parents first:
 
 1. Check out the branch.
 2. Read `~/.claude/commands/roundtable.md` and follow it with the chosen reviewer, with two
@@ -37,27 +46,58 @@ For each branch in the list, bottom-up:
    passes. If it cannot be made to pass, stop the whole run and report.
 5. Commit the fixes, if there are any.
 6. Stack mode only: run `gs upstack restack` so the branches above pick up the fixes before
-   they are reviewed. If the restack hits a conflict that is not a mechanical resolution,
-   stop and report.
+   they are reviewed. Resolve a conflict only when the resolution is mechanical, and re-run
+   verify on the branch that conflicted. Otherwise stop and report.
 
 ## Step 2 — Push and open draft PRs
 
 Follow the repo's PR template and label rules from CLAUDE.md or AGENTS.md. Write each
-description per the user's voice instructions.
+description per the user's voice instructions. New PRs are drafts. An existing PR keeps
+whatever draft status it has.
 
-- **Stack mode:** `gs stack submit --draft --fill`, then replace each new PR's filled-in
-  body with a proper description using `gh pr edit`.
-- **Single mode:** `git push -u origin HEAD`. If no PR exists, `gh pr create --draft` against
-  the base from step 0. If one exists, leave its draft status as it is.
+- **Stack mode:** for each branch, parents first, check whether it has a PR. With one, run
+  `gs branch submit`. Without one, run `gs branch submit --draft --fill`, then replace the
+  filled-in body with a proper description using `gh pr edit`.
+- **Single mode:** `git push -u origin HEAD`. If no PR exists, write the description to a
+  scratchpad file and run `gh pr create --draft --base <base> --title <title> --body-file
+  <file>`.
 
-## Step 3 — Prose pass, per branch
+Confirm every branch has an open PR before going on. If one does not, stop and report.
 
-For each branch, bottom-up, check it out and invoke the `prose-simplify` skill with the
-`codex` argument, whichever reviewer was chosen. It commits its comment edits and posts the
+## Step 3 — Screenshots, per branch
+
+Skip a branch whose diff has no user-visible UI change. Skip the whole step if the repo has
+no way to capture the UI (a screenshot skill such as `pr-screenshots`, or documented
+browser automation).
+
+For each remaining branch, parents first:
+
+1. Check out the branch and make sure the app is serving that branch's code.
+2. Capture the changed screens with the repo's screenshot skill. Take a before shot from the
+   branch's base only when the change is a visual tweak that needs the comparison.
+3. Read each image to confirm it shows the change. Drop any that do not.
+4. Upload them into the PR description's screenshots section. GitHub only hosts images
+   uploaded through its editor, so this goes through the Claude Chrome extension. If the
+   extension is not connected, do not retry or wait: keep the files and list their paths in
+   the wrap-up for the user to drag in.
+
+This runs before the prose pass because that pass carries existing screenshots over into the
 rewritten description.
 
-Stack mode only: after each branch whose pass made a commit, run `gs upstack restack`. When
-every branch is done, run `gs stack submit` once more to push the restacked branches.
+## Step 4 — Prose pass, per branch
+
+For each branch, parents first, check it out and invoke the `prose-simplify` skill with the
+`codex` argument, whichever reviewer was chosen. It commits its comment edits and posts the
+rewritten description. Hold its per-branch reports, revert offers, and undo instructions for
+the wrap-up instead of printing them as it goes.
+
+Stack mode changes two things:
+
+- Skip the skill's own push. A restack leaves the branches above diverged from their
+  remotes, so a plain push is rejected.
+- After each branch whose pass made a commit, run `gs upstack restack`, under the same
+  conflict rule as step 1. When every branch is done, run `gs stack submit --update-only`
+  to push them all.
 
 Return to the branch the run started on.
 
@@ -69,4 +109,5 @@ Report in one block, per branch:
 - Findings fixed, by number and severity
 - Findings not fixed: low, contested, and any skipped because the fix proved wrong
 - Verify result
-- Count of comment edits from the prose pass
+- Comment edits from the prose pass, and that `pr-desc-before.json` holds the old description
+- Screenshots uploaded, or the paths of any left for the user to attach
