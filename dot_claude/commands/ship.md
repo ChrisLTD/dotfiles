@@ -80,10 +80,10 @@ For each remaining branch, parents first:
 2. Capture the changed screens with the repo's screenshot skill. Take a before shot from the
    branch's base only when the change is a visual tweak that needs the comparison.
 3. Read each image to confirm it shows the change. Drop any that do not.
-4. Upload them into the PR description's screenshots section. GitHub only hosts images
-   uploaded through its editor, so this goes through the Claude Chrome extension. If the
-   extension is not connected, do not retry or wait: keep the files and list their paths in
-   the wrap-up for the user to drag in.
+4. Upload them into the PR description's screenshots section, following the screenshot
+   skill's upload instructions ("Attaching to a GitHub PR" in `pr-screenshots`). If the
+   Claude Chrome extension is not connected, do not retry or wait: keep the files and list
+   their paths in the wrap-up for the user to drag in.
 
 This runs before the prose pass because that pass carries existing screenshots over into the
 rewritten description.

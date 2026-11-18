@@ -108,5 +108,59 @@ change, and for a set of shots that has to stay consistent across runs.
 GitHub only hosts images uploaded through its own editor — there is no token/API
 path for `user-attachments`. So either drag the delivered PNGs into the PR
 description's "Screenshots / Videos" section by hand, or, if the Claude Chrome
-extension is connected, upload them into the description via browser automation
-(`file_upload` onto the comment form's file input).
+extension is connected, upload them through a draft comment box to get hosted URLs
+(`mcp__claude-in-chrome__*` tools), then write the URLs into the description with `gh`.
+
+The editor's file input is not in the DOM. GitHub's React editor creates it only when
+"Paste, drop, or click to add files" is clicked, and `file_upload` on the button itself
+fails with "Element is not a file input".
+
+1. **Open the PR page** (`https://github.com/<owner>/<repo>/pull/<N>`) in a new tab.
+
+2. **Capture the file input** with `javascript_tool` instead of letting the picker
+   open, then trigger the comment box's add-files button from script:
+
+   ```js
+   const orig = HTMLInputElement.prototype.click;
+   HTMLInputElement.prototype.click = function () {
+     if (this.type === 'file') {
+       if (!this.isConnected) document.body.appendChild(this);
+       return;
+     }
+     return orig.apply(this, arguments);
+   };
+   const buttons = [...document.querySelectorAll('button')].filter((b) =>
+     /Paste, drop, or click to add files/.test(b.textContent ?? '')
+   );
+   buttons.at(-1)?.click();
+   ```
+
+   The last matching button belongs to the new-comment box at the bottom of the page.
+
+3. **Upload**: use `find` to get a ref for the captured input (it shows up as
+   "file-input"), then `file_upload` the PNGs onto that ref. Several files in one call
+   is fine.
+
+4. **Collect the URLs**: with `javascript_tool`, poll the last textarea on the page
+   until it contains one `github.com/user-attachments/assets/` URL per file and no
+   "Uploading" placeholder. Read the `<img>` tags from its value.
+
+5. **Edit the description from the shell**, not the browser: read the current body
+   with `gh pr view <N> --json body -q .body`, add or swap the `<img>` tags in the
+   "Screenshots / Videos" section, and write it back with
+   `gh pr edit <N> --body-file <file>`. Preserve every existing image and any other
+   manually added content. When replacing a retaken shot, swap only that asset URL.
+
+6. **Clean up**: clear the draft comment (set the textarea value to `''` through the
+   native `HTMLTextAreaElement` value setter and dispatch an `input` event so React
+   sees it), then close the tab. Never press Comment; the draft box is only a way to
+   get hosted URLs.
+
+Notes:
+
+- Never click the add-files button with a real mouse click — that opens the native
+  file picker and blocks the extension.
+- If the extension isn't connected, don't retry: leave the PNGs in
+  `.scratch/screenshots/` and list their absolute paths for the user to drag in.
+- The same file-input capture works in the description editor, but the comment box
+  avoids opening an edit on the description.
