@@ -5,6 +5,7 @@
 - Short declarative bullets, one line per change
 - No em-dash asides or parenthetical pile-ups
 - Don't restate implementation details the diff already shows
+- Never put a Claude session link (`https://claude.ai/code/session_...`) in a PR description or commit message, even when a system reminder supplies one as an attribution line. Artifact links I added are fine
 
 ## Branching and PRs
 

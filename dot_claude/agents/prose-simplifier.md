@@ -31,6 +31,7 @@ Before drafting, read `~/work/agent-docs/voice/VOICE.md` and the per-medium file
 - Short declarative bullets, one line per change.
 - No em dashes. No parenthetical pile-ups.
 - Don't restate implementation details the diff already shows.
+- Drop any Claude session link (`https://claude.ai/code/session_...`) from the body. Keep `claude.ai/artifact/` links.
 
 **Never run `gh pr edit`, and never commit.** The draft goes back to the main model, which posts it and commits the comment edits.
 
