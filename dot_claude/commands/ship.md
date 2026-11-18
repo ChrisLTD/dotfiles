@@ -1,5 +1,5 @@
 ---
-description: Roundtable-review the current branch or stack, fix high and medium findings, open draft PRs with screenshots, then run the prose pass
+description: Roundtable-review the current branch or stack, fix high and medium findings, drop low-value tests, open draft PRs with screenshots, then run the prose pass
 argument-hint: "[codex|copilot|both]"
 ---
 
@@ -30,7 +30,7 @@ effect of any command, so do not run it when that ref is missing.
 Stack mode only: run `gs stack restack` now, so the review sees each branch on top of its
 current parent.
 
-## Step 1 — Review and fix, per branch
+## Step 1 — Review, fix, and prune tests, per branch
 
 For each branch in the list, parents first:
 
@@ -41,11 +41,15 @@ For each branch in the list, parents first:
 3. Fix every confirmed high and medium finding. Leave low, contested, and refuted findings
    alone. If applying a fix shows the finding was wrong, revert that fix and record it as
    skipped with the reason.
-4. Run the project's verify steps (`.claude/commands/verify.md` in the repo if it exists,
+4. Invoke the `prune-tests` skill with this branch's base as its argument, so tests written
+   for the fixes above are audited too. Its "report only" rule does not apply here: delete
+   every candidate that survives its adjudication step. Keep the "weak but sole coverage"
+   tests and carry them to the wrap-up.
+5. Run the project's verify steps (`.claude/commands/verify.md` in the repo if it exists,
    otherwise its own static, test, and build commands). Fix what breaks and re-run until it
    passes. If it cannot be made to pass, stop the whole run and report.
-5. Commit the fixes, if there are any.
-6. Stack mode only: run `gs upstack restack` so the branches above pick up the fixes before
+6. Commit the fixes and test removals, if there are any.
+7. Stack mode only: run `gs upstack restack` so the branches above pick up the changes before
    they are reviewed. Resolve a conflict only when the resolution is mechanical, and re-run
    verify on the branch that conflicted. Otherwise stop and report.
 
@@ -108,6 +112,7 @@ Report in one block, per branch:
 - PR link
 - Findings fixed, by number and severity
 - Findings not fixed: low, contested, and any skipped because the fix proved wrong
+- Tests dropped, each with its reason, and any weak ones kept as sole coverage
 - Verify result
 - Comment edits from the prose pass, and that `pr-desc-before.json` holds the old description
 - Screenshots uploaded, or the paths of any left for the user to attach
