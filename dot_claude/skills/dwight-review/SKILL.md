@@ -94,6 +94,11 @@ would write that comment, and give at most six. Each finding has:
 - a kind: **mechanical** (one obvious fix that needs no decision from me) or **judgment**
   (a question about design, scope, or behavior). Anything touching the profile's open
   disagreements is judgment.
+- a weight: **press** (he would follow up if I pushed back or deferred it) or **nit** (he
+  would accept "will do in a follow-up"). Judge it by the profile's nit and blocker signals
+  in section 1 and by how the precedent thread went: a point he repeated after my reply, or
+  has raised on more than one PR, is press. This is not how serious the problem is, only
+  how hard he would hold the point.
 
 No finding without a grounding in the profile or a past thread.
 
@@ -107,6 +112,11 @@ survivor one outcome:
   is clear from the code or this session. Draft the one line that would go in the PR
   description to answer the question before he asks it. Three of these at most; a
   description that pre-argues everything is worse than the questions.
+- **Follow-up:** a point that is right, that he would let me defer, and whose fix belongs
+  outside this PR: a refactor, a shared component, a backend change, or the next branch in
+  the stack. The weight must be nit; he does not accept deferral on a press item. Draft the
+  description line that says where it goes. If that needs a ticket that does not exist, say
+  so and leave creating it to the user. Two of these at most.
 - **Ask:** everything else. Likely judgment findings with no clear answer, anything on the
   profile's open-disagreements list, and all possible findings.
 
@@ -115,11 +125,12 @@ survivor one outcome:
 In measured-app, write the surviving findings to `predictions/<repo>-<branch with slashes as dashes>.md`,
 overwriting any earlier run for the branch. Start the file with the date, the branch, and
 the PR number if there is one, then the findings in rank order with their confidence, kind,
-and outcome. The refresh scores this file once he has reviewed the PR. Do not commit it
+weight, and outcome. The refresh scores this file once he has reviewed the PR. Do not commit it
 now; the next refresh commits it.
 
 Report the findings numbered for easy reference (1., 2., 3., sub-items 2a., 2b.), grouped
-as Fix, Answer, then Ask, each with its precedent, and for Answer items the drafted line.
+as Fix, Answer, Follow-up, then Ask, press before nit within each group. Each has its
+weight and its precedent, and Answer and Follow-up items have their drafted line.
 
 Report only. Do not change code or the PR description until the user says which items to
 act on. Never post anything to GitHub from this skill.
@@ -133,7 +144,9 @@ act on. Never post anything to GitHub from this skill.
    point or the right point elsewhere. Append one row per PR to `scorecard.md` (date, PR,
    his comment count, hits, partials, how many predictions, whether the top-ranked one
    hit) and move the file to `predictions/scored/`. A PR he approved without comment still
-   gets a row.
+   gets a row. For each hit, also record whether the weight was right: the real thread
+   counts as press if he came back after my reply or it ended in a code change he asked
+   for twice, and as nit otherwise.
 3. Read the records newer than the old `Data through:` date and update `profile.md`: add
    new themes, bump counts and last-seen months, and add quotes with `#PR` where a newer
    one is clearer. Give extra weight to comments the predictions missed. Move a theme to

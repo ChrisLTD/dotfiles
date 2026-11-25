@@ -36,7 +36,7 @@ never runs.
 
 6. Adjudicate each finding as confirmed, contested, or refuted. You are the judge: when reviewers still disagree, read the code and make the call, and say which reviewer you sided with and why.
 7. Report, ordered by severity (high / medium / low) within confirmed, then contested. For each item include a consensus score out of the number of reviewers (3/3, 2/3, 1/3 with both externals; 2/2, 1/2 with one) and who flagged it. List refuted findings briefly at the end so the user knows they were considered.
-8. With `dwight`: finish the `dwight-review` skill's steps 3 and 4 on its remaining findings, and report them in their own "What Dwight would say" section after the reviewer findings, grouped as Fix, Answer, then Ask.
+8. With `dwight`: finish the `dwight-review` skill's steps 3 and 4 on its remaining findings, and report them in their own "What Dwight would say" section after the reviewer findings, grouped as Fix, Answer, Follow-up, then Ask.
 9. Number all items for easy reference (top-level: 1., 2., 3.; sub-items: 2a., 2b.) so the user can respond like "3: please fix" or "2b: stet". Numbering continues through the Dwight section.
 
 Report only — do not apply any fixes until the user says which items to address.
