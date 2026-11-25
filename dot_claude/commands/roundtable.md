@@ -1,6 +1,6 @@
 ---
 description: Review roundtable - Claude plus Codex and/or Copilot review independently, then cross-examine each other's findings
-argument-hint: "[codex|copilot|both]"
+argument-hint: "[codex|copilot|both] [dwight]"
 ---
 
 Run a two-round review of the current changes with independent reviewers: you (Claude) plus the external reviewers picked by `$ARGUMENTS`:
@@ -11,12 +11,18 @@ Run a two-round review of the current changes with independent reviewers: you (C
 
 "External reviewers" below means whichever of those were picked.
 
+Adding `dwight` to the arguments (for example `both dwight`) also runs the Dwight pass. It
+only applies in `measured-fi/measured-app` (`gh repo view --json nameWithOwner`); anywhere
+else, say it was skipped and carry on. Without the word, the pass never runs.
+
 ## Round 1 — independent reviews
 
 1. Determine the scope: the current branch's diff against main (or the relevant base).
 2. Launch the picked external reviewer agents (`codex-review`, `copilot-review`) in parallel on that scope.
+   - With `dwight`: follow the `dwight-review` skill's steps 0 to 2 and launch its review sub-agent in the same batch.
 3. While they run, do your own review in the main context. Read the changed files in full, not just the diff — look for correctness bugs, edge cases, and missing tests. Write your findings down BEFORE reading the agents' results so you aren't anchored by them.
 4. Merge every reviewer's set into candidate findings. Deduplicate, and tag each with who flagged it (claude / codex / copilot).
+   - Keep the Dwight pass out of this merge. It predicts one reviewer's comments rather than hunting bugs, so it is not a reviewer for consensus scoring and its findings are not cross-examined. Where one of its findings matches a candidate, add a `dwight` tag to that candidate and drop the duplicate.
 
 ## Round 2 — cross-examination
 
@@ -29,6 +35,7 @@ Run a two-round review of the current changes with independent reviewers: you (C
 
 6. Adjudicate each finding as confirmed, contested, or refuted. You are the judge: when reviewers still disagree, read the code and make the call, and say which reviewer you sided with and why.
 7. Report, ordered by severity (high / medium / low) within confirmed, then contested. For each item include a consensus score out of the number of reviewers (3/3, 2/3, 1/3 with both externals; 2/2, 1/2 with one) and who flagged it. List refuted findings briefly at the end so the user knows they were considered.
-8. Number all items for easy reference (top-level: 1., 2., 3.; sub-items: 2a., 2b.) so the user can respond like "3: please fix" or "2b: stet".
+8. With `dwight`: finish the `dwight-review` skill's steps 3 and 4 on its remaining findings, and report them in their own "What Dwight would say" section after the reviewer findings, grouped as Fix, Answer, then Ask.
+9. Number all items for easy reference (top-level: 1., 2., 3.; sub-items: 2a., 2b.) so the user can respond like "3: please fix" or "2b: stet". Numbering continues through the Dwight section.
 
 Report only — do not apply any fixes until the user says which items to address.
