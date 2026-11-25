@@ -156,22 +156,31 @@ act on. Never post anything to GitHub from this skill.
      code, or the right point predicted on the neighboring PR in the stack
    - otherwise a miss
 
-   Score every prediction in the file. For each hit, the weight was right if it matches
-   how he really held the point: press if his comment was a flat statement with no hedge
-   or he came back after my reply, nit otherwise. Append one row per PR to the Live runs
-   table in `scorecard.md`, dated today, with a dash under Weight right when the file has
-   no weights. Move the file to `predictions/scored/`, creating it if needed.
-3. **Update the profile** from the new records:
+   Score every prediction in the file, and append a `## Scored <date>` section to it
+   listing each prediction as hit, partial, or miss with the point of his it matched; the
+   soften rule below reads these. For each hit, the weight was right if it matches how he
+   really held the point: press if his comment was a flat statement with no hedge or he
+   came back after my reply, nit otherwise. Append one row per PR to the Live runs table
+   in `scorecard.md`, dated today. "Top-ranked hit" is yes when prediction 1 was a hit.
+   Weight right is a fraction of the hits, or a dash when the file has no weights. Move
+   the file to `predictions/scored/`, creating it if needed.
+3. **Update the profile** from the new records. Skip the records of any PR whose
+   prediction file was left unscored in step 2, so the profile does not learn the answers
+   before that file is scored; they are picked up by the refresh that scores it.
    - Add new themes at the end of their area, and never renumber existing ones; scored
      prediction files cite themes by number.
    - Bump counts and last-seen months, and add a quote with `#PR` where a newer one is
      clearer. A comment counts toward the one theme it fits best.
    - A comment the predictions missed becomes a theme or a trigger on an existing one.
-   - Soften a theme or trigger only once the scorecard's scored files show five or more
-     predictions resting on it, across three or more PRs, with no hit. Append a dated
-     tally to it and tell the reader to rate it possible; do not delete it.
-   - Section 4: a thread where I declined and he neither replied nor raised it again
-     before the PR merged goes under settled, marked "no reply". Move it to open
+   - Soften a theme or trigger only once the scored files show five or more predictions
+     resting on it, across three or more PRs, with no hit or partial. A prediction rests
+     on the first theme it cites. Do not soften a theme he raised himself in the new
+     records, even if the predictions missed it. Append a dated tally and tell the reader
+     to rate it possible; do not delete it. Remove the tally when the theme next gets a
+     hit.
+   - Section 4: a thread where I replied with a reason and changed nothing, and he
+     neither replied nor raised it again before the PR merged, goes under settled, marked
+     "no reply". Move it to open
      disagreements if he ever raises it again.
    - Retire a theme when the code it is about is gone from `origin/main` in
      `~/work/measured-app` (`git fetch origin` first, then `git grep <pattern> origin/main`).
