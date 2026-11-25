@@ -137,20 +137,45 @@ act on. Never post anything to GitHub from this skill.
 
 ## Refresh
 
-1. Note the profile's `Data through:` date, then run `fetch.sh`.
-2. Score predictions. For each file in `predictions/` whose PR now has comments from him
-   in `threads.jsonl` or has merged, compare the predictions with what he wrote: a **hit**
-   is the same point on the same code, a **partial** is the right spot with a different
-   point or the right point elsewhere. Append one row per PR to `scorecard.md` (date, PR,
-   his comment count, hits, partials, how many predictions, whether the top-ranked one
-   hit) and move the file to `predictions/scored/`. A PR he approved without comment still
-   gets a row. For each hit, also record whether the weight was right: the real thread
-   counts as press if he came back after my reply or it ended in a code change he asked
-   for twice, and as nit otherwise.
-3. Read the records newer than the old `Data through:` date and update `profile.md`: add
-   new themes, bump counts and last-seen months, and add quotes with `#PR` where a newer
-   one is clearer. Give extra weight to comments the predictions missed. Move a theme to
-   the retired list when the code it is about is gone, and soften one that has produced
-   several predictions with no hit.
+1. **Fetch.** Copy `threads.jsonl` to the scratchpad, then run `fetch.sh`. It refuses to
+   replace the file if the record count went down. The new records are the ones that are
+   not in the old copy, or whose `comments` changed; compare the files rather than going by
+   date, so a late reply on an old thread is caught too.
+2. **Score predictions.** A prediction file is ready when its PR has merged or closed
+   (`gh pr view <number> --repo measured-fi/measured-app --json state`). If the file has no
+   PR number, find it with `gh pr list --head <branch> --state all`. Leave files for open
+   PRs alone, even if he has already commented; he may not be done.
+
+   For each ready file, list his points on that PR: one per thread, one more for a later
+   comment of his that makes a separate point, and one per review summary or PR comment
+   with substance. "lgtm" does not count. Then mark each of his points:
+
+   - **hit:** a prediction made the same point about the same change, even if it anchored
+     on a different file or line
+   - **partial:** the right spot with a different point, the right point on different
+     code, or the right point predicted on the neighboring PR in the stack
+   - otherwise a miss
+
+   Score every prediction in the file. For each hit, the weight was right if it matches
+   how he really held the point: press if his comment was a flat statement with no hedge
+   or he came back after my reply, nit otherwise. Append one row per PR to the Live runs
+   table in `scorecard.md`, dated today, with a dash under Weight right when the file has
+   no weights. Move the file to `predictions/scored/`, creating it if needed.
+3. **Update the profile** from the new records:
+   - Add new themes at the end of their area, and never renumber existing ones; scored
+     prediction files cite themes by number.
+   - Bump counts and last-seen months, and add a quote with `#PR` where a newer one is
+     clearer. A comment counts toward the one theme it fits best.
+   - A comment the predictions missed becomes a theme or a trigger on an existing one.
+   - Soften a theme or trigger only once the scorecard's scored files show five or more
+     predictions resting on it, across three or more PRs, with no hit. Append a dated
+     tally to it and tell the reader to rate it possible; do not delete it.
+   - Section 4: a thread where I declined and he neither replied nor raised it again
+     before the PR merged goes under settled, marked "no reply". Move it to open
+     disagreements if he ever raises it again.
+   - Retire a theme when the code it is about is gone from `origin/main` in
+     `~/work/measured-app` (`git fetch origin` first, then `git grep <pattern> origin/main`).
+   - Recompute the totals in the header and the proportions in section 1, and update the
+     "Stack state checked" line with the same import counts.
 4. Set `Data through:` to today.
-5. Commit and push agent-docs.
+5. Commit and push agent-docs, staging only `reviewers/dwight/`.
