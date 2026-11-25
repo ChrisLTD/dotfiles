@@ -12,8 +12,9 @@ Run a two-round review of the current changes with independent reviewers: you (C
 "External reviewers" below means whichever of those were picked.
 
 Adding `dwight` to the arguments (for example `both dwight`) also runs the Dwight pass. It
-only applies in `measured-fi/measured-app` (`gh repo view --json nameWithOwner`); anywhere
-else, say it was skipped and carry on. Without the word, the pass never runs.
+only applies in React front-end repos, as the `dwight-review` skill's "Where it applies"
+section defines; anywhere else, say it was skipped and carry on. Without the word, the pass
+never runs.
 
 ## Round 1 — independent reviews
 

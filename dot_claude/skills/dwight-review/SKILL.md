@@ -20,6 +20,25 @@ The data lives in `~/work/agent-docs/reviewers/dwight/`:
 If `profile.md` is missing, say so and stop. If `$ARGUMENTS` is `refresh`, do the Refresh
 section and stop.
 
+## Where it applies
+
+Any React front-end: a repo where `react` is a dependency in the root `package.json` or in
+a workspace package's. Anywhere else, say it does not apply and stop.
+
+The profile was mined from `measured-fi/measured-app`, and he only reviews PRs there. In
+any other React repo, run in **portable mode**:
+
+- Use the profile's sections 1 and 2 and the general React, data fetching, forms, styling,
+  accessibility, types, and tooling themes.
+- Skip what is specific to measured-app: the domain rules, anything naming an `@measured/*`
+  package or an app-specific helper, the `[ts.md]` pointers, and the settled and open
+  disagreement lists.
+- "We already have this" still applies, but against this repo's own helpers and libraries.
+- Skip the past-thread lookup by path in step 2; the paths will not match.
+- Skip the prediction file in step 4. He will never review the PR, so there is nothing to
+  score it against.
+- Say in the report that it ran in portable mode.
+
 Predictions are experimental until the scorecard says otherwise. In the backtest the top
 finding matched a real comment of his about half the time, and most of the rest were things
 he did not raise. So this skill only reports. The one other caller is `/roundtable`, and
@@ -93,7 +112,7 @@ survivor one outcome:
 
 ## Step 4: Record and report
 
-Write the surviving findings to `predictions/<repo>-<branch with slashes as dashes>.md`,
+In measured-app, write the surviving findings to `predictions/<repo>-<branch with slashes as dashes>.md`,
 overwriting any earlier run for the branch. Start the file with the date, the branch, and
 the PR number if there is one, then the findings in rank order with their confidence, kind,
 and outcome. The refresh scores this file once he has reviewed the PR. Do not commit it
